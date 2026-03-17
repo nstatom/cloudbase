@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Ceilometer Cloud Viewer</title>
+<title>Airport Cloud Viewer</title>
 
 <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
@@ -10,15 +10,15 @@
 
 <style>
 body{
-font-family: Arial;
-margin:15px;
+font-family:Arial;
+margin:20px;
 }
 
 #controls{
 display:flex;
 gap:10px;
 flex-wrap:wrap;
-margin-bottom:10px;
+margin-bottom:15px;
 }
 
 input{
@@ -29,16 +29,10 @@ font-size:16px;
 #plot{
 height:500px;
 border:2px solid #444;
-margin-top:10px;
 }
 
-.error{
-color:red;
-}
-
-.warning{
-color:orange;
-}
+.error{color:red;}
+.warning{color:orange;}
 
 </style>
 </head>
@@ -67,10 +61,6 @@ color:orange;
 
 const MAX_HOURS = 168;
 
-// ---------------------
-// LOAD DATA
-// ---------------------
-
 async function loadData(){
 
 let icao =
@@ -90,70 +80,65 @@ document.getElementById("messages").innerHTML =
 
 }
 
-const url =
-`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json&hours=${hours}`;
-
 try{
 
-const response = await fetch(url);
+const response =
+await fetch("https://aviationweather.gov/data/cache/metars.cache.csv");
 
-if(!response.ok){
-throw new Error("API request failed");
-}
+const text =
+await response.text();
 
-const data = await response.json();
+const rows =
+text.split("\n");
 
-if(data.length === 0){
+let times=[];
+let heights=[];
+let colors=[];
+
+const now = Date.now();
+const cutoff = now - hours*3600000;
+
+rows.forEach(row => {
+
+if(!row.includes(icao)) return;
+
+const cols = row.split(",");
+
+const raw = cols[0];
+const time = new Date(cols[2]);
+
+if(time.getTime() < cutoff) return;
+
+const matches =
+raw.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
+
+if(!matches) return;
+
+matches.forEach(layer => {
+
+const cover = layer.substring(0,3);
+const height = parseInt(layer.substring(3))*100;
+
+times.push(time);
+heights.push(height);
+
+if(cover==="FEW") colors.push("green");
+else if(cover==="SCT") colors.push("blue");
+else if(cover==="BKN") colors.push("orange");
+else if(cover==="OVC") colors.push("red");
+
+});
+
+});
+
+if(times.length===0){
 
 document.getElementById("messages").innerHTML =
-"<span class='error'>No METAR data returned</span>";
+"<span class='error'>No cloud data found</span>";
 
 return;
-}
-
-plotClouds(data);
 
 }
-catch(err){
-
-console.error(err);
-
-document.getElementById("messages").innerHTML =
-"<span class='error'>Download failed</span>";
-
-}
-
-}
-
-// ---------------------
-// PARSE CLOUD DATA
-// ---------------------
-
-function plotClouds(data){
-
-let times = [];
-let heights = [];
-let colors = [];
-
-data.forEach(m => {
-
-if(!m.clouds) return;
-
-m.clouds.forEach(layer => {
-
-times.push(new Date(m.obsTime));
-
-heights.push(layer.base);
-
-if(layer.cover === "FEW") colors.push("green");
-else if(layer.cover === "SCT") colors.push("blue");
-else if(layer.cover === "BKN") colors.push("orange");
-else if(layer.cover === "OVC") colors.push("red");
-else colors.push("gray");
-
-});
-
-});
 
 let trace = {
 
@@ -163,17 +148,15 @@ y:heights,
 mode:"markers",
 
 marker:{
-size:14,
+size:12,
 color:colors
-},
-
-name:"METAR Cloud Base"
+}
 
 };
 
 let layout = {
 
-title:"Cloud Base Height",
+title:`${icao} Cloud Base Height`,
 
 xaxis:{
 title:"Time"
@@ -188,8 +171,17 @@ title:"Cloud Base (ft AGL)"
 Plotly.newPlot("plot",[trace],layout);
 
 }
+catch(err){
 
-// auto load default station
+console.error(err);
+
+document.getElementById("messages").innerHTML =
+"<span class='error'>Download failed</span>";
+
+}
+
+}
+
 loadData();
 
 </script>
