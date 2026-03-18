@@ -16,7 +16,7 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 
 <body>
 
-<h2>Airport Ceilometer Data v1.03</h2>
+<h2>Airport Ceilometer Data v1.04</h2>
 
 <label>Airport ICAO Code:</label>
 <input id="icao" value="KSAN">
@@ -25,14 +25,15 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <input id="hours" value="24">
 
 <button onclick="run()">Run Update</button>
-
+<br>
 <h3>AviationWeather API Hourly METAR Data Request</h3>
 
 <div id="status"></div>
-
+<br>
 <h3>AviationWeather API Hourly METAR Data Response</h3>
 <pre id="raw"></pre>
-
+<br>
+<h3>Airport Cloud Ceiling Time Series Plot</h3>
 <div id="plot"></div>
 
 <script>
