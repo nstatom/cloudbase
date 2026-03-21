@@ -97,6 +97,13 @@ document.getElementById("status").innerHTML +=
 
 const json = await r.json();
 
+if(!json.data || !Array.isArray(json.data)){
+  document.getElementById("status").innerHTML +=
+    "<br><span class='error'>Invalid data returned</span>";
+  console.log("Bad response:", json);
+  return;
+}
+
 // show full response
 document.getElementById("raw").textContent =
 JSON.stringify(json, null, 2);
@@ -251,9 +258,6 @@ data.forEach(m => {
   });
 
 });
-
-// enforce minimum 3000 ft
-let yMax = Math.max(maxHeight, 3000);
 
 // convert traces object → array
 let plotTraces = Object.values(traces);
