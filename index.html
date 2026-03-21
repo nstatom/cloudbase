@@ -105,34 +105,78 @@ console.error(err);
 
 function plot(data){
 
-let x = [];
-let y = [];
+let traces = {
+  SKC: {x:[], y:[], mode:"markers", name:"SKC/NSC",
+        marker:{color:"yellow", size:12, symbol:"triangle-up"}},
+
+  FEW: {x:[], y:[], mode:"markers", name:"FEW",
+        marker:{color:"green", size:10, symbol:"circle"}},
+
+  SCT: {x:[], y:[], mode:"markers", name:"SCT",
+        marker:{color:"blue", size:10, symbol:"circle"}},
+
+  BKN: {x:[], y:[], mode:"markers", name:"BKN",
+        marker:{color:"red", size:10, symbol:"circle"}},
+
+  OVC: {x:[], y:[], mode:"markers", name:"OVC",
+        marker:{color:"black", size:10, symbol:"circle"}}
+};
+
+let maxHeight = 0;
 
 data.forEach(m => {
 
-if(!m.clouds) return;
+  let t = new Date(m.time);
 
-m.clouds.forEach(c => {
+  // --- SKC / NSC (no clouds) ---
+  if(!m.clouds || m.clouds.length === 0){
+    traces.SKC.x.push(t);
+    traces.SKC.y.push(0);
+    return;
+  }
 
-if(!c.base) return;
+  // --- Cloud layers ---
+  m.clouds.forEach(c => {
 
-// Worker uses ISO time string
-x.push(new Date(m.time * 1000));
-y.push(c.base);
+    if(!c.base) return;
+
+    let base = c.base;
+    let cover = c.cover;
+
+    if(base > maxHeight) maxHeight = base;
+
+    if(traces[cover]){
+      traces[cover].x.push(t);
+      traces[cover].y.push(base);
+    }
+
+  });
 
 });
 
-});
+// enforce minimum 3000 ft
+let yMax = Math.max(maxHeight, 3000);
 
-Plotly.newPlot("plot",[{
-x:x,
-y:y,
-mode:"markers"
-}],{
-margin:{l:40,r:20,t:20,b:40},
-xaxis:{title:"Time [UTC]"},
-yaxis:{title:"Cloud Base AGL [ft]"}
-});
+// convert traces object → array
+let plotTraces = Object.values(traces);
+
+// remove empty traces (clean legend)
+plotTraces = plotTraces.filter(tr => tr.x.length > 0);
+
+Plotly.newPlot("plot", plotTraces, {
+
+  margin:{l:50,r:20,t:20,b:40},
+
+  xaxis:{
+    title:"Time [UTC]"
+  },
+
+  yaxis:{
+    title:"Cloud Base AGL [ft]",
+    range:[0, yMax]
+  }
+
+}, {displaylogo:false});
 
 }
 
