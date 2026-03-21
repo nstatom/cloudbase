@@ -107,22 +107,22 @@ function plot(data){
 
 let traces = {
   SKC: {x:[], y:[], mode:"markers", name:"SKC/NSC",
-        marker:{color:"yellow", size:12, symbol:"triangle-up"}},
+        marker:{color:"yellow", size:15, symbol:"triangle-up"}},
 
   FEW: {x:[], y:[], mode:"markers", name:"FEW",
-        marker:{color:"green", size:10, symbol:"circle"}},
+        marker:{color:"green", size:15, symbol:"circle"}},
 
   SCT: {x:[], y:[], mode:"markers", name:"SCT",
-        marker:{color:"blue", size:10, symbol:"circle"}},
+        marker:{color:"blue", size:15, symbol:"circle"}},
 
   BKN: {x:[], y:[], mode:"markers", name:"BKN",
-        marker:{color:"red", size:10, symbol:"circle"}},
+        marker:{color:"red", size:15, symbol:"circle"}},
 
   OVC: {x:[], y:[], mode:"markers", name:"OVC",
-        marker:{color:"black", size:10, symbol:"circle"}}
+        marker:{color:"black", size:15, symbol:"circle"}}
 };
 
-let maxHeight = 0;
+let maxHeight = -500;
 
 data.forEach(m => {
 
@@ -130,7 +130,7 @@ data.forEach(m => {
 
   // --- SKC / NSC (no clouds) ---
   if(!m.clouds || m.clouds.length === 0){
-    traces.SKC.x.push(t);
+    traces.SKC.x.push(t*1000);
     traces.SKC.y.push(0);
     return;
   }
@@ -143,10 +143,10 @@ data.forEach(m => {
     let base = c.base;
     let cover = c.cover;
 
-    if(base > maxHeight) maxHeight = base;
+    if(base > maxHeight) maxHeight = base + 500;
 
     if(traces[cover]){
-      traces[cover].x.push(t);
+      traces[cover].x.push(t*1000);
       traces[cover].y.push(base);
     }
 
@@ -173,7 +173,7 @@ Plotly.newPlot("plot", plotTraces, {
 
   yaxis:{
     title:"Cloud Base AGL [ft]",
-    range:[0, yMax]
+    range:[-500, yMax]
   }
 
 }, {displaylogo:false});
