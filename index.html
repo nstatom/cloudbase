@@ -64,15 +64,15 @@ const WORKER_URL = "https://noaa-fetch.nstatom.workers.dev"
 // ---------------- RUN ----------------
 
 async function run(){
+  
+let icao = document.getElementById("icao").value.toUpperCase();
+let hours = parseInt(document.getElementById("hours").value);
 
 document.getElementById("title3k").innerText =
   `${icao} METAR Low Cloud Evolution (<3000 ft)`;
 
 document.getElementById("titleFull").innerText =
   `${icao} METAR Full Cloud Evolution`;
-  
-let icao = document.getElementById("icao").value.toUpperCase();
-let hours = parseInt(document.getElementById("hours").value);
 
 // enforce max
 if(hours > 168){
@@ -87,10 +87,6 @@ if(hours > 168){
 const url = `${WORKER_URL}?station=${icao}&hours=${hours}`;
 
 document.getElementById("status").innerHTML = url;
-
-document.getElementById("icao").addEventListener("keypress", e => {
-  if(e.key === "Enter") run();
-});
 
 try{
 
@@ -167,7 +163,7 @@ data.forEach(m => {
     if(base > maxHeight) maxHeight = base + 1000;
 
     if(traces[cover]){
-      traces[cover].x.push(t*1000);
+      traces[cover].x.push(t);
       traces[cover].y.push(base);
     }
 
@@ -248,7 +244,7 @@ data.forEach(m => {
     if(base > maxHeight) maxHeight = base + 1000;
 
     if(traces[cover]){
-      traces[cover].x.push(t*1000);
+      traces[cover].x.push(t);
       traces[cover].y.push(base);
     }
 
