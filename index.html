@@ -55,11 +55,11 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <b>Data Disclaimer</b>
 
 <p>
-Hourly cloud data (larger circles) is based on airport METAR readings from the NOAA Aviation Weather API. These observations average the past 30 minutes of ceilometer data with double weighting for the last 10 minutes of passing sky condition observations.
+Hourly cloud data (larger icons) is based on airport METAR readings from the NOAA Aviation Weather API. These observations average the past 30 minutes of airport ceilometer data with double weighting for the last 10 minutes of passing sky condition observations.
 </p>
 
 <p>
-High rate cloud data (smaller circles) is from the Iowa State Mesonet API. The resulting ceilometer five minute observations are more prone to overall cloud status mischaracterization in patchy cloud conditions than the METAR data since each observation is the result of a 5 minute collection of point measurements with less averaging.
+High rate cloud data (smaller icons) is from the Iowa State Mesonet API. The resulting ceilometer observations are more prone to overall cloud status mischaracterization in patchy cloud conditions than the METAR data since each observation is the result of a 5 minute collection of point measurements with normal averaging.
 </p>
 
 <script>
@@ -120,7 +120,7 @@ if(json.station){   // adjust if your structure is slightly different
 
 		document.getElementById("airportInfo").innerHTML = `
 		<b>${icao} Airport Information:</b>
-		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft. Note: Plotted cloud heights are in reference to airport ground elevation.
+		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft. Note: Plotted cloud heights are in reference to airport <u>ground</u> elevation.
 		<br>
 		`;
 	}
