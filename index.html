@@ -193,7 +193,7 @@ Plotly.newPlot("plot", plotTraces, {
   margin:{l:50,r:20,t:20,b:40},
   
   xaxis:{
-    title:"Time [UTC]"
+    title:"Local Time"
   },
 
   yaxis:{
@@ -230,7 +230,7 @@ let maxHeight = -500;
 
 data.forEach(m => {
 
-  let t = new Date(m.time);
+  let t = new Date(m.time*1000);
 
   // --- SKC / NSC (no clouds) ---
   if(!m.clouds || m.clouds.length === 0){
@@ -269,7 +269,7 @@ Plotly.newPlot("plot3k", plotTraces, {
   margin:{l:50,r:20,t:20,b:40},
 
   xaxis:{
-    title:"Time [UTC]"
+    title:"Local Time"
   },
 
   yaxis:{
