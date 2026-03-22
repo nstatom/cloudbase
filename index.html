@@ -265,7 +265,7 @@ let t = new Date(m.time * 1000);
 // --- IFR category (plot at fixed height) ---
 if(m.ifr && traces[m.ifr]){
   traces[m.ifr].x.push(t);
-  traces[m.ifr].y.push(-500);
+  traces[m.ifr].y.push(-3000);
 }
 
   // --- SKC / NSC (no clouds) ---
@@ -313,7 +313,7 @@ Plotly.newPlot("plot", plotTraces, {
 
   yaxis:{
     title:"Cloud Base AGL [ft]",
-    range:[-1000, 31000]
+    range:[-4000, 31000]
   }
 
 }, {displaylogo:false});
@@ -357,13 +357,13 @@ let maxHeight = -500;
 
 data.forEach(m => {
 
+  let t = new Date(m.time*1000);
+
 // --- IFR category (plot at fixed height) ---
 if(m.ifr && traces[m.ifr]){
   traces[m.ifr].x.push(t);
-  traces[m.ifr].y.push(-500);
+  traces[m.ifr].y.push(-300);
 }
-
-  let t = new Date(m.time*1000);
 
   // --- SKC / NSC (no clouds) ---
   if(!m.clouds || m.clouds.length === 0){
@@ -407,7 +407,7 @@ Plotly.newPlot("plot3k", plotTraces, {
 
   yaxis:{
     title:"Cloud Base AGL [ft]",
-    range:[-100, 3100]
+    range:[-400, 3100]
   }
 
 }, {displaylogo:false});
