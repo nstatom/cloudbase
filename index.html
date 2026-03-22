@@ -19,7 +19,7 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 
 <h1 style="display:flex; align-items:center; gap:7px;">
   <img src="CloudbaseLogo.png" style="height:40px;">
-  Cloudbase v1.08
+  Cloudbase v1.09
 </h1>
 
 <label>Airport ICAO Code:</label>
@@ -102,23 +102,6 @@ document.getElementById("status").innerHTML +=
 
 const json = await r.json();
 
-// --- Airport Info ---
-if(json.meta){   // adjust if your structure is slightly different
-
-  const lat = json.meta.lat;
-  const lon = json.meta.lon;
-  const alt = json.meta.alt;
-
-  document.getElementById("airportInfo").innerHTML = `
-    <b>${icao} Airport Information:</b>
-    Latitude = ${lat}, Longitude = ${lon}, Altitude = ${alt} ft.
-    <br>
-    <span style="font-size:0.9em;">
-      Note: Plotted cloud heights are in reference to airport ground elevation.
-    </span>
-  `;
-}
-
 if(!json.data || !Array.isArray(json.data)){
   document.getElementById("status").innerHTML +=
     "<br><span class='error'>Invalid data returned</span>";
@@ -126,7 +109,25 @@ if(!json.data || !Array.isArray(json.data)){
   return;
 }
 
+// --- Airport Info ---
+if(json.station){   // adjust if your structure is slightly different
 
+	const lat = json.station?.lat;
+	const lon = json.station?.lon;
+	const alt = json.station?.elev;
+
+	if(lat !== undefined && lon !== undefined){
+
+		document.getElementById("airportInfo").innerHTML = `
+		<b>${icao} Airport Information:</b>
+		Latitude = ${lat}, Longitude = ${lon}, Altitude = ${alt} ft.
+		<br>
+		<span style="font-size:0.9em;">
+		Note: Plotted cloud heights are in reference to airport ground elevation.
+		</span>
+		`;
+	}
+}
 
 // show full response
 document.getElementById("raw").textContent =
