@@ -102,10 +102,10 @@ let icao = document.getElementById("icao").value.toUpperCase();
 let hours = parseInt(document.getElementById("hours").value);
 
 document.getElementById("title3k").innerText =
-  `${icao} Past ${hours} Hour Low Cloud Height and Flight Rules Category Timeline (=< 3000 ft)`;
+  `${icao} Past ${hours} Hours Low Cloud Height and Flight Rules Category Timeline (=< 3000 ft)`;
 
 document.getElementById("titleFull").innerText =
-  `${icao} Past ${hours} Hour Full Cloud Height and Flight Rules Category Timeline`;
+  `${icao} Past ${hours} Hours Full Cloud Height and Flight Rules Category Timeline`;
 
 // enforce max
 if(hours > 168){
@@ -146,7 +146,7 @@ try {
 
   // title
   document.getElementById("titleMesonet").innerText =
-    `${icao} Past ${hours} Hour HR Cloud Height Timeline`;
+    `${icao} Past ${hours} Hours HR Cloud Height Timeline`;
 
   // plot
   plotMesonet(json2.data, icao);
