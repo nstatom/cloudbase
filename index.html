@@ -74,7 +74,7 @@ let icao = document.getElementById("icao").value.toUpperCase();
 let hours = parseInt(document.getElementById("hours").value);
 
 document.getElementById("title3k").innerText =
-  `${icao} ${hours} Hour Low Cloud Evolution (< 3000 ft)`;
+  `${icao} ${hours} Hour Low Cloud Evolution (=< 3000 ft)`;
 
 document.getElementById("titleFull").innerText =
   `${icao} ${hours} Hour Full Cloud Evolution`;
@@ -120,7 +120,7 @@ if(json.station){   // adjust if your structure is slightly different
 
 		document.getElementById("airportInfo").innerHTML = `
 		<b>${icao} Airport Information:</b>
-		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft. Note: Plotted cloud heights are in reference to airport <u>ground</u> elevation.
+		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft. Note: Plotted cloud heights below are in reference to airport <u>ground</u> elevation.
 		<br>
 		`;
 	}
@@ -219,7 +219,7 @@ Plotly.newPlot("plot", plotTraces, {
 
   yaxis:{
     title:"Cloud Base AGL [ft]",
-    range:[-yMax/30, yMax+yMax/30]
+    range:[-1000, 26000]
   }
 
 }, {displaylogo:false});
