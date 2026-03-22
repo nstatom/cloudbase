@@ -191,7 +191,7 @@ if(json.station){   // adjust if your structure is slightly different
 
 		document.getElementById("airportInfo").innerHTML = `
 		<b>${icao} Airport Information:</b>
-		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft. Note: Plotted cloud heights below are in reference to the airport <u>ground</u> elevation and rounded to the nearest 100 ft. Add the airport elevation to get cloud MSL heights. Clear sky conditions are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily for convenience. Remember that overcast conditions can obscure higher elevation clouds from being detected by the ceilometer. Data outages may occur due to changes in the source APIs or issues with data storage servers.
+		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
 		<br>
 		`;
 	}
@@ -199,7 +199,7 @@ if(json.station){   // adjust if your structure is slightly different
 
 document.getElementById("plotInfo").innerHTML = `
 <b>Cloud Height Plots Information:</b>
-Plotted cloud heights below are in reference to the airport <b>ground</b> elevation and rounded to the nearest 100 ft. Add the airport elevation to get cloud MSL heights. Clear sky conditions are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily for convenience. Remember that overcast conditions can obscure higher elevation clouds from being detected by the ceilometer. Data outages may occur due to changes in the source APIs or issues with the source data storage servers.
+Plotted cloud heights below are in reference to the airport <b>ground</b> elevation and rounded to the nearest 100 ft. Add the airport elevation that is listed above to get cloud MSL heights. Clear sky conditions are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily for convenience. Remember that overcast conditions can obscure higher elevation clouds from being detected by the ceilometer. Data outages may occur due to changes in the source APIs or issues with the source data storage servers.
 <br>
 `;
 
