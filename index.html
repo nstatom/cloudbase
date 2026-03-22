@@ -31,8 +31,8 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <button onclick="run()">Update</button>
 
 <br>
+<br>
 <div id="airportInfo" style="margin-top:10px;"></div>
-
 
 <br>
 <h3 id="title3k"></h3>
@@ -120,11 +120,8 @@ if(json.station){   // adjust if your structure is slightly different
 
 		document.getElementById("airportInfo").innerHTML = `
 		<b>${icao} Airport Information:</b>
-		Latitude = ${lat}, Longitude = ${lon}, Altitude = ${alt} ft.
+		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft. Note: Plotted cloud heights are in reference to airport ground elevation.
 		<br>
-		<span style="font-size:0.9em;">
-		Note: Plotted cloud heights are in reference to airport ground elevation.
-		</span>
 		`;
 	}
 }
