@@ -45,6 +45,10 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <div id="airportInfo" style="margin-top:10px;"></div>
 
 <br>
+<h3 id="titleMesonet"></h3>
+<div id="plotMesonet" style="height:450px; border:2px solid #444; margin-top:10px;"></div>
+
+<br>
 <h3 id="title3k"></h3>
 <div id="plot3k"></div>
 
@@ -53,18 +57,14 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <div id="plot"></div>
 
 <br>
-<h3 id="titleMesonet"></h3>
-<div id="plotMesonet" style="height:450px; border:2px solid #444; margin-top:10px;"></div>
-
-<br>
 <br>
 <b>Cloud Height Plot Information</b>
 
 <p>
-Currently the plots can contain up to 168 hours (1 week) of METAR data. Plotted cloud heights are in reference to the airport ground elevation and rounded to the nearest 100 ft. Add the airport elevation that is listed above to get cloud heights in reference to MSL. Clear sky conditions (yellow circles) are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily for data tracking convenience. Note that lower level cloudy conditions (especially overcast) can obscure higher elevation clouds from being detected by the airport's ceilometer.
+Currently the plots can contain up to 168 hours (1 week) of METAR data. Plotted cloud heights are in reference to the airport ground elevation and rounded to the nearest 100 ft. Add the specific airport elevation that is listed above to get cloud heights in reference to MSL. Clear sky conditions (yellow circles) are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily for data tracking convenience (color coded squares). Note that lower level cloudy conditions (especially overcast) can obscure higher elevation clouds from being detected by the airport's ceilometer.
 </p>
 <p>
-Hourly cloud data (larger icons) are based on standard airport METAR readings that are fetched using the NOAA Aviation Weather API. These observations average the past 30 minutes of airport ceilometer data with double weighting for the last 10 minutes of passing sky condition observations. High frequency (HF) cloud data (smaller icons) are generated from the same METAR stations but are fetched using the Iowa State Mesonet API. The resulting HF ceilometer observations may be more prone to overall cloud status mischaracterization in patchy cloud conditions than the hourly METAR data since each HF observation is the result of only a 5 minute collection of vertical point measurements with normal averaging. 
+Hourly cloud data (larger icons) are based on standard airport METAR readings that are fetched using the NOAA Aviation Weather API. These observations average the past 30 minutes of airport ceilometer data with double weighting for the last 10 minutes of passing sky condition observations. The flight rules category is not computed for high rate data and therefore omitted from the plot. High frequency (HF) cloud data (smaller icons) are generated from the same METAR stations but are fetched using the Iowa State Mesonet API. The resulting HF ceilometer observations may be more prone to overall cloud status mischaracterization in patchy cloud conditions than the hourly METAR data since each HF observation is the result of only a 5 minute collection of vertical point measurements with standard averaging. 
 </p>
 
 <br>
@@ -235,7 +235,10 @@ let traces = {
   BKN: {x:[], y:[], mode:"markers", name:"BKN",
         marker:{color:"red", size:16, symbol:"circle"}},
 
-  OVC: {x:[], y:[], mode:"markers", name:"OVC",
+  OVC: {x:[], y:[], mode:"markers", name:"OVC/VV",
+        marker:{color:"black", size:16, symbol:"circle"}},
+		
+  VV: {x:[], y:[], mode:"markers", name:"OVC/VV",
         marker:{color:"black", size:16, symbol:"circle"}},
 		
   LIFR: {x:[], y:[], mode:"markers", name:"LIFR",
@@ -332,7 +335,10 @@ let traces = {
   BKN: {x:[], y:[], mode:"markers", name:"BKN",
         marker:{color:"red", size:16, symbol:"circle"}},
 
-  OVC: {x:[], y:[], mode:"markers", name:"OVC",
+  OVC: {x:[], y:[], mode:"markers", name:"OVC/VV",
+        marker:{color:"black", size:16, symbol:"circle"}},
+	
+  VV: {x:[], y:[], mode:"markers", name:"OVC/VV",
         marker:{color:"black", size:16, symbol:"circle"}},
 		
   LIFR: {x:[], y:[], mode:"markers", name:"LIFR",
@@ -420,19 +426,22 @@ function plotMesonet(data, icao){
 
   let traces = {
     SKC: {x:[], y:[], mode:"markers", name:"SKC",
-          marker:{color:"yellow", size:7}},
+          marker:{color:"yellow", size:8}},
 
     FEW: {x:[], y:[], mode:"markers", name:"FEW",
-          marker:{color:"green", size:7}},
+          marker:{color:"green", size:8}},
 
     SCT: {x:[], y:[], mode:"markers", name:"SCT",
-          marker:{color:"blue", size:7}},
+          marker:{color:"blue", size:8}},
 
     BKN: {x:[], y:[], mode:"markers", name:"BKN",
-          marker:{color:"red", size:7}},
+          marker:{color:"red", size:8}},
 
-    OVC: {x:[], y:[], mode:"markers", name:"OVC",
-          marker:{color:"black", size:7}}
+    OVC: {x:[], y:[], mode:"markers", name:"OVC/VV",
+          marker:{color:"black", size:8}}
+		  
+    VV: {x:[], y:[], mode:"markers", name:"OVC/VV",
+          marker:{color:"black", size:8}}
   };
 
   data.forEach(m => {
