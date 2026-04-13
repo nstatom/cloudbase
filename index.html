@@ -296,34 +296,34 @@ function plotSynoptic(data, icao, markerSize){
 
 let traces = {
   SKC: {x:[], y:[], mode:"markers", name:"SKC",
-        marker:{color:"yellow", size:markerSize, symbol:"circle"}},
+        marker:{color:"yellow", size:markerSize, symbol:"circle", opacity: []}},
 
   FEW: {x:[], y:[], mode:"markers", name:"FEW",
-        marker:{color:"green", size:markerSize, symbol:"circle"}},
+        marker:{color:"green", size:markerSize, symbol:"circle", opacity: []}},
 
   SCT: {x:[], y:[], mode:"markers", name:"SCT",
-        marker:{color:"blue", size:markerSize, symbol:"circle"}},
+        marker:{color:"blue", size:markerSize, symbol:"circle", opacity: []}},
 
   BKN: {x:[], y:[], mode:"markers", name:"BKN",
-        marker:{color:"red", size:markerSize, symbol:"circle"}},
+        marker:{color:"red", size:markerSize, symbol:"circle", opacity: []}},
 
   OVC: {x:[], y:[], mode:"markers", name:"OVC/VV",
-        marker:{color:"black", size:markerSize, symbol:"circle"}},
+        marker:{color:"black", size:markerSize, symbol:"circle", opacity: []}},
 		
   VV: {x:[], y:[], mode:"markers", name:"OVC/VV",
-        marker:{color:"black", size:markerSize, symbol:"circle"}},
+        marker:{color:"black", size:markerSize, symbol:"circle", opacity: []}},
 		
   LIFR: {x:[], y:[], mode:"markers", name:"LIFR",
-        marker:{color:"purple", size:markerSize, symbol:"square"}},
+        marker:{color:"purple", size:markerSize, symbol:"square", opacity: []}},
 
   IFR: {x:[], y:[], mode:"markers", name:"IFR",
-        marker:{color:"red", size:markerSize, symbol:"square"}},
+        marker:{color:"red", size:markerSize, symbol:"square", opacity: []}},
 
   MVFR: {x:[], y:[], mode:"markers", name:"MVFR",
-        marker:{color:"blue", size:markerSize, symbol:"square"}},
+        marker:{color:"blue", size:markerSize, symbol:"square", opacity: []}},
 
   VFR: {x:[], y:[], mode:"markers", name:"VFR",
-        marker:{color:"green", size:markerSize, symbol:"square"}}
+        marker:{color:"green", size:markerSize, symbol:"square", opacity: []}}
 };
 
 let maxHeight = -1000;
@@ -336,12 +336,14 @@ let t = new Date(m.time * 1000);
 if(m.ifr && traces[m.ifr]){
   traces[m.ifr].x.push(t);
   traces[m.ifr].y.push(-2000);
+  traces[m.ifr].marker.opacity.push(opacity);
 }
 
   // --- SKC / NSC (no clouds) ---
   if(!m.clouds || m.clouds.length === 0){
     traces.SKC.x.push(t);
     traces.SKC.y.push(0);
+	traces[cover].marker.opacity.push(opacity);
     return;
   }
 
@@ -358,6 +360,7 @@ if(m.ifr && traces[m.ifr]){
     if(traces[cover]){
       traces[cover].x.push(t);
       traces[cover].y.push(base);
+	  traces[cover].marker.opacity.push(opacity);
     }
 
   });
@@ -531,6 +534,7 @@ let maxHeight = -500;
 
 data.forEach(m => {
 
+  let opacity = (m.source === "HF") ? 0.4 : 1.0;
   let t = new Date(m.time*1000);
 
 // --- IFR category (plot at fixed height) ---
