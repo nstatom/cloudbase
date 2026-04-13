@@ -322,7 +322,7 @@ function formatMetarString(m, icao){
   }
 
   // Wind
-  const wind = m.wind_speed && m.wind_dir
+  const wind = (m.wind_speed !== null && m.wind_dir !== null)
     ? `${m.wind_speed}kt from ${m.wind_dir}deg`
     : "N/A";
 
