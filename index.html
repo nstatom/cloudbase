@@ -237,95 +237,69 @@ function plotSynoptic(data, icao, sizes, hours){
 
 let traces = {
   SKC_STD: {x:[], y:[], mode:"markers", name:"SKC (STD)",
-        marker:{color:"yellow", size:markerSize, symbol:"circle", opacity:1}},
+        marker:{color:"yellow", size:sizes.big, symbol:"circle", opacity:1}},
 
   FEW_STD: {x:[], y:[], mode:"markers", name:"FEW (STD)",
-        marker:{color:"green", size:markerSize, symbol:"circle", opacity:1}},
+        marker:{color:"green", size:sizes.big, symbol:"circle", opacity:1}},
 
   SCT_STD: {x:[], y:[], mode:"markers", name:"SCT (STD)",
-        marker:{color:"blue", size:markerSize, symbol:"circle", opacity:1}},
+        marker:{color:"blue", size:sizes.big, symbol:"circle", opacity:1}},
 
   BKN_STD: {x:[], y:[], mode:"markers", name:"BKN (STD)",
-        marker:{color:"red", size:markerSize, symbol:"circle", opacity:1}},
+        marker:{color:"red", size:sizes.big, symbol:"circle", opacity:1}},
 
   OVC_STD: {x:[], y:[], mode:"markers", name:"OVC/VV (STD)",
-        marker:{color:"black", size:markerSize, symbol:"circle", opacity:1}},
+        marker:{color:"black", size:sizes.big, symbol:"circle", opacity:1}},
 		
   VV_STD: {x:[], y:[], mode:"markers", name:"OVC/VV (STD)",
-        marker:{color:"black", size:markerSize, symbol:"circle", opacity:1}},
+        marker:{color:"black", size:sizes.big, symbol:"circle", opacity:1}},
 		
   LIFR_STD: {x:[], y:[], mode:"markers", name:"LIFR (STD)",
-        marker:{color:"purple", size:markerSize, symbol:"square", opacity:1}},
+        marker:{color:"purple", size:sizes.big, symbol:"square", opacity:1}},
 
   IFR_STD: {x:[], y:[], mode:"markers", name:"IFR (STD)",
-        marker:{color:"red", size:markerSize, symbol:"square", opacity:1}},
+        marker:{color:"red", size:sizes.big, symbol:"square", opacity:1}},
 
   MVFR_STD: {x:[], y:[], mode:"markers", name:"MVFR (STD)",
-        marker:{color:"blue", size:markerSize, symbol:"square", opacity:1}},
+        marker:{color:"blue", size:sizes.big, symbol:"square", opacity:1}},
 
   VFR_STD: {x:[], y:[], mode:"markers", name:"VFR (STD)",
-        marker:{color:"green", size:markerSize, symbol:"square", opacity:1}},
+        marker:{color:"green", size:sizes.big, symbol:"square", opacity:1}},
 		
   SKC_HF: {x:[], y:[], mode:"markers", name:"SKC (HF)",
-        marker:{color:"yellow", size:markerSize * 0.5, symbol:"circle-open", opacity:1}},
+        marker:{color:"yellow", size:sizes.small * 0.5, symbol:"circle-open", opacity:1}},
 
   FEW_HF: {x:[], y:[], mode:"markers", name:"FEW (HF)",
-        marker:{color:"green", size:markerSize * 0.5, symbol:"circle-open", opacity:1}},
+        marker:{color:"green", size:sizes.small * 0.5, symbol:"circle-open", opacity:1}},
 
   SCT_HF: {x:[], y:[], mode:"markers", name:"SCT (HF)",
-        marker:{color:"blue", size:markerSize * 0.5, symbol:"circle-open", opacity:1}},
+        marker:{color:"blue", size:sizes.small * 0.5, symbol:"circle-open", opacity:1}},
 
   BKN_HF: {x:[], y:[], mode:"markers", name:"BKN (HF)",
-        marker:{color:"red", size:markerSize * 0.5, symbol:"circle-open", opacity:1}},
+        marker:{color:"red", size:sizes.small * 0.5, symbol:"circle-open", opacity:1}},
 
   OVC_HF: {x:[], y:[], mode:"markers", name:"OVC/VV (HF)",
-        marker:{color:"black", size:markerSize * 0.5, symbol:"circle-open", opacity:1}},
+        marker:{color:"black", size:sizes.small * 0.5, symbol:"circle-open", opacity:1}},
 		
   VV_HF: {x:[], y:[], mode:"markers", name:"OVC/VV (HF)",
-        marker:{color:"black", size:markerSize * 0.5, symbol:"circle-open", opacity:1}},
+        marker:{color:"black", size:sizes.small * 0.5, symbol:"circle-open", opacity:1}},
 		
   LIFR_HF: {x:[], y:[], mode:"markers", name:"LIFR (HF)",
-        marker:{color:"purple", size:markerSize * 0.5, symbol:"square-open", opacity:1}},
+        marker:{color:"purple", size:sizes.small * 0.5, symbol:"square-open", opacity:1}},
 
   IFR_HF: {x:[], y:[], mode:"markers", name:"IFR (HF)",
-        marker:{color:"red", size:markerSize * 0.5, symbol:"square-open", opacity:1}},
+        marker:{color:"red", size:sizes.small * 0.5, symbol:"square-open", opacity:1}},
 
   MVFR_HF: {x:[], y:[], mode:"markers", name:"MVFR (HF)",
-        marker:{color:"blue", size:markerSize * 0.5, symbol:"square-open", opacity:1}},
+        marker:{color:"blue", size:sizes.small * 0.5, symbol:"square-open", opacity:1}},
 
   VFR_HF: {x:[], y:[], mode:"markers", name:"VFR (HF)",
-        marker:{color:"green", size:markerSize * 0.5, symbol:"square-open", opacity:1}}
+        marker:{color:"green", size:sizes.small * 0.5, symbol:"square-open", opacity:1}}
 };
 
 //----------------- Wind Plot-----------------
 document.getElementById("titleWind").innerText =
   `${icao} Wind Speed & Direction`;
-
-Plotly.newPlot("plotWind",
-  [windSpeed_STD, windSpeed_HF, windDir_STD, windDir_HF],
-  {
-    margin:{l:50,r:50,t:20,b:40},
-
-    xaxis:{
-      title:"Time"
-    },
-
-    yaxis:{
-      title:"Wind Speed (kt)",
-      rangemode:"tozero"
-    },
-
-    yaxis2:{
-      title:"Wind Direction (deg)",
-      overlaying:"y",
-      side:"right",
-      range:[0,360]
-    },
-
-    legend:{orientation:"h"}
-  },
-  {displaylogo:false}
-);
 
 let maxHeight = -1000;
 
@@ -407,6 +381,32 @@ data.forEach(m => {
     }
   }
 });
+
+Plotly.newPlot("plotWind",
+  [windSpeed_STD, windSpeed_HF, windDir_STD, windDir_HF],
+  {
+    margin:{l:50,r:50,t:20,b:40},
+
+    xaxis:{
+      title:"Time"
+    },
+
+    yaxis:{
+      title:"Wind Speed (kt)",
+      rangemode:"tozero"
+    },
+
+    yaxis2:{
+      title:"Wind Direction (deg)",
+      overlaying:"y",
+      side:"right",
+      range:[0,360]
+    },
+
+    legend:{orientation:"h"}
+  },
+  {displaylogo:false}
+);
 
 // enforce minimum 3000 ft
 let yMax = Math.max(maxHeight, 3000);
