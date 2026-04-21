@@ -470,30 +470,30 @@ data.forEach(m => {
   }
 });
 
-let allTemps = [];
-let allDewps = [];
+let allVals = [];
 
-data.forEach(m => {
-  if (m.temp !== null && m.temp !== undefined) {
-    allTemps.push(m.temp);
-  }
-  if (m.dewpoint !== null && m.dewpoint !== undefined) {
-    allDewps.push(m.dewpoint);
-  }
-});
+// include BOTH temp and dewpoint in one pass
+for (let m of data) {
+  if (m.temp !== null && m.temp !== undefined) allVals.push(m.temp);
+  if (m.dewpoint !== null && m.dewpoint !== undefined) allVals.push(m.dewpoint);
+}
 
-const allVals = allTemps.concat(allDewps);
+const minY = Math.min(...allVals);
+const maxY = Math.max(...allVals);
+const pad = (maxY - minY) * 0.1 || 1;
 
-const yMin = Math.min(...allVals);
-const yMax = Math.max(...allVals);
-
-// add padding so it doesn't feel cramped
-const pad = (yMax - yMin) * 0.1 || 1;
-
-const yRange = [yMin - pad, yMax + pad];
+// THIS is the key trick:
+const boundsTrace = {
+  x: [null, null],
+  y: [minY - pad, maxY + pad],
+  mode: "lines",
+  line: {opacity: 0},
+  hoverinfo: "skip",
+  showlegend: false
+};
 
 Plotly.newPlot("plotTemp",
-  [Temp_STD, Temp_HF, Dewp_STD, Dewp_HF],
+  [boundsTrace, Temp_STD, Temp_HF, Dewp_STD, Dewp_HF],
   {
     margin:{l:50,r:50,t:20,b:40},
 
@@ -503,8 +503,7 @@ Plotly.newPlot("plotTemp",
 
     yaxis:{
       title:"Temperature & Dewpoint (°F)",
-      range: yRange,
-      autorange: false
+      autorange: true
     },
 
     legend:{orientation:"h"}
