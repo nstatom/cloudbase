@@ -135,7 +135,15 @@ try {
   const json3 = await r3.json();
 
 // --- Airport Info ---
-const ts = json3.timeseries;
+const ts = json3?.timeseries;
+const data = ts?.data;
+
+if (!Array.isArray(data)) {
+  document.getElementById("status3").innerHTML +=
+    "<br><span class='error'>Invalid Synoptic data</span>";
+  console.error("Bad structure:", json3);
+  return;
+}
 
 const lat = json3.station?.lat;
 const lon = json3.station?.lon;
