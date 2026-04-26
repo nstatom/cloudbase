@@ -139,18 +139,17 @@ const ts = json3.timeseries;
 
 if(ts?.station){
 
-	const lat = json3.station?.lat;
-	const lon = json3.station?.lon;
-	const alt = json3.station?.elev;
+  const lat = ts.station.lat;
+  const lon = ts.station.lon;
+  const alt = ts.station.elev;
 
-	if(lat !== undefined && lon !== undefined){
-
-		document.getElementById("airportInfo").innerHTML = `
-		<b>${icao} Airport Information:</b>
-		Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
-		<br>
-		`;
-	}
+  if(lat !== undefined && lon !== undefined){
+    document.getElementById("airportInfo").innerHTML = `
+      <b>${icao} Airport Information:</b>
+      Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
+      <br>
+    `;
+  }
 }
 
   // show raw response
@@ -160,11 +159,12 @@ if(ts?.station){
   console.log("Synoptic:", json3);
 
   // validate
-  if(!ts.data || !Array.isArray(ts.data)){
-    document.getElementById("status3").innerHTML +=
-      "<br><span class='error'>Invalid Synoptic data</span>";
-    return;
-  }
+if(!ts || !Array.isArray(ts.data)){
+  document.getElementById("status3").innerHTML +=
+    "<br><span class='error'>Invalid Synoptic data</span>";
+  console.error("Bad structure:", json3);
+  return;
+}
 
 // ---- ADD THIS RIGHT HERE ----
 let decodedLines = ts.data.map(m => formatMetarString(m, icao));
@@ -390,7 +390,7 @@ data.forEach(m => {
   if (m.pressure !== null && m.pressure !== undefined) {
     if (isHF) {
       pressure_HF.x.push(t);
-      pressure_HF.y.push(m.pressure);
+      pressure_HF.y.push(Number(m.pressure));
     } else {
       pressure_STD.x.push(t);
       pressure_STD.y.push(Number(m.pressure));
@@ -401,7 +401,7 @@ data.forEach(m => {
   if (m.visibility !== null && m.visibility !== undefined) {
     if (isHF) {
       vis_HF.x.push(t);
-      vis_HF.y.push(m.visibility);
+      vis_HF.y.push(Number(m.visibility));
     } else {
       vis_STD.x.push(t);
       vis_STD.y.push(Number(m.visibility));
@@ -475,10 +475,10 @@ data.forEach(m => {
 
     if (isHF) {
       windSpeed_HF.x.push(t);
-      windSpeed_HF.y.push(m.wind_speed);
+      windSpeed_HF.y.push(Number(m.wind_speed));
 
       windDir_HF.x.push(t);
-      windDir_HF.y.push(m.wind_dir);
+      windDir_HF.y.push(Number(m.wind_dir));
     } else {
       windSpeed_STD.x.push(t);
       windSpeed_STD.y.push(Number(m.wind_speed));
@@ -548,7 +548,7 @@ data.forEach(m => {
   if (m.temp !== null && m.temp !== undefined) {
     if (isHF) {
       Temp_HF.x.push(t);
-      Temp_HF.y.push(m.temp);
+      Temp_HF.y.push(Number(m.temp));
     } else {
       Temp_STD.x.push(t);
       Temp_STD.y.push(Number(m.temp));
@@ -558,7 +558,7 @@ data.forEach(m => {
   if (m.dewpoint !== null && m.dewpoint !== undefined) {
     if (isHF) {
       Dewp_HF.x.push(t);
-      Dewp_HF.y.push(m.dewpoint);
+      Dewp_HF.y.push(Number(m.dewpoint));
     } else {
       Dewp_STD.x.push(t);
       Dewp_STD.y.push(Number(m.dewpoint));
