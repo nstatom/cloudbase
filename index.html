@@ -135,7 +135,9 @@ try {
   const json3 = await r3.json();
 
 // --- Airport Info ---
-if(json3.station){   // adjust if your structure is slightly different
+const ts = json3.timeseries;
+
+if(ts?.station){
 
 	const lat = json3.station?.lat;
 	const lon = json3.station?.lon;
@@ -158,14 +160,14 @@ if(json3.station){   // adjust if your structure is slightly different
   console.log("Synoptic:", json3);
 
   // validate
-  if(!json3.data || !Array.isArray(json3.data)){
+  if(!ts.data || !Array.isArray(ts.data)){
     document.getElementById("status3").innerHTML +=
       "<br><span class='error'>Invalid Synoptic data</span>";
     return;
   }
 
 // ---- ADD THIS RIGHT HERE ----
-let decodedLines = json3.data.map(m => formatMetarString(m, icao));
+let decodedLines = ts.data.map(m => formatMetarString(m, icao));
 decodedLines.reverse();
 
 document.getElementById("decoded").textContent =
@@ -176,7 +178,7 @@ document.getElementById("decoded").textContent =
     `${icao} ${hours} hr Low Cloud Profile (0 - 3,000 ft)`;
 
   // plot
-  plotSynoptic(json3.data, icao, sizes, hours);
+  plotSynoptic(ts.data, icao, sizes, hours);
 
 
 }catch(err){
