@@ -145,9 +145,9 @@ if (!Array.isArray(data)) {
   return;
 }
 
-const lat = json3.station?.lat;
-const lon = json3.station?.lon;
-const alt = json3.station?.elev;
+const lat = json3.timeseries?.station?.lat;
+const lon = json3.timeseries?.station?.lon;
+const alt = json3.timeseries?.station?.elev;
 
 if(lat !== undefined && lon !== undefined){
   document.getElementById("airportInfo").innerHTML = `
