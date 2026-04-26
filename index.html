@@ -137,19 +137,16 @@ try {
 // --- Airport Info ---
 const ts = json3.timeseries;
 
-if(ts?.station){
+const lat = json3.station?.lat;
+const lon = json3.station?.lon;
+const alt = json3.station?.elev;
 
-  const lat = ts.station.lat;
-  const lon = ts.station.lon;
-  const alt = ts.station.elev;
-
-  if(lat !== undefined && lon !== undefined){
-    document.getElementById("airportInfo").innerHTML = `
-      <b>${icao} Airport Information:</b>
-      Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
-      <br>
-    `;
-  }
+if(lat !== undefined && lon !== undefined){
+  document.getElementById("airportInfo").innerHTML = `
+    <b>${icao} Airport Information:</b>
+    Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
+    <br>
+  `;
 }
 
   // show raw response
