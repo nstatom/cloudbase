@@ -24,7 +24,13 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 
 <h1 style="display:flex; align-items:center; gap:7px;">
   <img src="CloudbaseLogoTight.png" style="height:40px;">
-  HF Cloudbase
+
+  <span class="hover-info">
+    HF Cloudbase
+    <span class="tooltip">
+      High Frequency METAR Cloud Visualization
+    </span>
+  </span>
 </h1>
 
 <label>Airport ICAO Code:</label>
@@ -49,7 +55,7 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <div id="plotSynopticFull"></div>
 
 <br>
-<h3>Nearby Station Cloud Data (< 50 mile radius)</h3>
+<h3>Latest Cloud Data at Nearby Airports (< 50 mile radius)</h3>
 <div id="map" style="height:400px; border:2px solid #444;"></div>
 
 <br>
@@ -80,7 +86,7 @@ Hourly cloud data ('STD', larger filled icons) are based on standard airport MET
 <b>Meteorological Plot Information</b>
 
 <p>
-Wind direction is plotted as 0 by default if the accompanying wind speed is zero.
+Wind direction is plotted as 0 by default if the corresponding wind speed is zero.
 </p>
 
 <br>
