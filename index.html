@@ -151,8 +151,8 @@ console.log("timeseries:", json3?.timeseries);
 console.log("data:", json3?.timeseries?.data);
 
 // --- Airport Info ---
-const ts = json3?.timeseries;
-const data = ts?.data;
+const ts = json3;        // 👈 entire object IS your timeseries
+const data = json3?.data;
 
 if (!Array.isArray(data)) {
   document.getElementById("status3").innerHTML +=
@@ -161,9 +161,10 @@ if (!Array.isArray(data)) {
   return;
 }
 
-const lat = json3.timeseries?.station?.lat;
-const lon = json3.timeseries?.station?.lon;
-const alt = json3.timeseries?.station?.elev;
+const station = json3?.station;
+const lat = station?.lat;
+const lon = station?.lon;
+const alt = station?.elev;
 
 if(lat !== undefined && lon !== undefined){
   document.getElementById("airportInfo").innerHTML = `
@@ -180,7 +181,7 @@ if(lat !== undefined && lon !== undefined){
   console.log("Synoptic:", json3);
 
   // validate
-if(!ts || !Array.isArray(ts.data)){
+if (!Array.isArray(data)){
   document.getElementById("status3").innerHTML +=
     "<br><span class='error'>Invalid Synoptic data</span>";
   console.error("Bad structure:", json3);
@@ -188,7 +189,7 @@ if(!ts || !Array.isArray(ts.data)){
 }
 
 // ---- ADD THIS RIGHT HERE ----
-let decodedLines = ts.data.map(m => formatMetarString(m, icao));
+let decodedLines = data.map(m => formatMetarString(m, icao));
 decodedLines.reverse();
 
 document.getElementById("decoded").textContent =
@@ -199,7 +200,7 @@ document.getElementById("decoded").textContent =
     `${icao} ${hours} hr Low Cloud Profile (0 - 3,000 ft)`;
 
   // plot
-  plotSynoptic(ts.data, icao, sizes, hours);
+  plotSynoptic(data, icao, sizes, hours);
 
 
 }catch(err){
