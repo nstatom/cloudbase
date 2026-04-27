@@ -1,944 +1,1196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>High Frequency Airport METAR Cloud Visualizations</title>
 
-<head>
-  <meta charset="utf-8">
-  <title>High Frequency Airport METAR Cloud Visualizations</title>
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
-  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 25px;
+      }
 
-  <style>
-    body {
-      font-family: Arial;
-      margin: 25px;
-    }
+      #plotSynoptic,
+      #plotSynopticFull,
+      #plotPressure,
+      #plotWind,
+      #plotTemp {
+        height: 450px;
+        border: 2px solid #444;
+        margin-top: 10px;
+      }
 
-    #plotSynoptic,
-    #plotSynopticFull,
-    #plotPressure,
-    #plotWind,
-    #plotTemp {
-      height: 450px;
-      border: 2px solid #444;
-      margin-top: 10px;
-    }
+      #plotIFR {
+        height: 100px;
+        border: 2px solid #444;
+        margin-top: 10px;
+      }
 
-    #plotIFR {
-      height: 100px;
-      border: 2px solid #444;
-      margin-top: 10px;
-    }
+      pre {
+        background: #eee;
+        padding: 10px;
+        height: 200px;
+        overflow: auto;
+      }
 
-    pre {
-      background: #eee;
-      padding: 10px;
-      height: 200px;
-      overflow: auto;
-    }
+      .error {
+        color: red;
+      }
 
-    .error {
-      color: red;
-    }
+      .warning {
+        color: orange;
+      }
 
-    .warning {
-      color: orange;
-    }
+      .hover-info {
+        position: relative;
+        cursor: help;
+      }
 
-    .hover-info {
-      position: relative;
-      cursor: help;
-    }
+      .tooltip {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        top: 120%;
+        left: 0;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 6px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        transition: opacity 0.2s ease-in-out;
+        z-index: 1000;
+      }
 
-    .tooltip {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 120%;
-      left: 0;
-      background: rgba(0, 0, 0, 0.85);
-      color: white;
-      padding: 6px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      transition: opacity 0.2s ease-in-out;
-      z-index: 1000;
-    }
+      .hover-info:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
+    </style>
+  </head>
 
-    .hover-info:hover .tooltip {
-      visibility: visible;
-      opacity: 1;
-    }
-  </style>
+  <body>
+    <h1 style="display: flex; align-items: center; gap: 7px">
+      <img src="CloudbaseLogoTight.png" style="height: 40px" />
 
-</head>
-
-<body>
-
-  <h1 style="display:flex; align-items:center; gap:7px;">
-    <img src="CloudbaseLogoTight.png" style="height:40px;">
-
-    <span class="hover-info">
-      HF Cloudbase
-      <span class="tooltip">
-        High Frequency Airport METAR Cloud Visualizations
+      <span class="hover-info">
+        HF Cloudbase
+        <span class="tooltip">
+          High Frequency Airport METAR Cloud Visualizations
+        </span>
       </span>
-    </span>
-  </h1>
-
-  <label>Airport ICAO Code:</label>
-  <input id="icao" value="KSAN">
-
-  &nbsp;&nbsp;
-
-  <label>Prior Hours to Display:</label>
-  <input id="hours" value="24">
-  <button onclick="run()">Update</button>
-
-  <br>
-  <br>
-  <div id="airportInfo" style="margin-top:10px;"></div>
-
-  <br>
-  <h3 id="titleSynoptic"></h3>
-  <div id="plotSynoptic"></div>
-
-  <br>
-  <h3 id="titleSynopticFull"></h3>
-  <div id="plotSynopticFull"></div>
-
-  <br>
-  <h3>Latest Cloud Data at Nearby Airports (< 50 mile radius)</h3>
-      <div id="map" style="height:400px; border:2px solid #444;"></div>
-
-      <br>
-      <br>
-      <b>Cloud Height Plot Information</b>
-
-      <p>
-        Currently the plots can contain up to 168 hours (1 week) of METAR data from standard ASOS/AWOS stations at a
-        given ICAO airport code. Plotted cloud heights are in reference to the airport ground elevation and rounded to
-        the nearest 100 ft. Add the specific airport elevation listed above to get cloud heights in reference to MSL.
-        Clear sky conditions (yellow circles) are plotted at 0 ft elevation and the flight rules category is plotted at
-        a negative elevation arbitrarily (color coded squares) for quick referencing. Note that lower level cloudy
-        conditions (especially overcast) can obscure higher elevation clouds from being detected by the airport's
-        ceilometer.
-      </p>
-      <p>
-        Hourly cloud data ('STD', larger filled icons) are based on standard airport METAR readings that are fetched
-        using the <a href="https://synopticdata.com/" target="_blank" rel="noopener noreferrer">Synoptic Data</a> API.
-        These observations average the past 30 minutes of airport ceilometer data with double weighting for the last 10
-        minutes of passing sky condition observations. High frequency cloud data ('HF', smaller unfilled icons) are
-        generated from the same METAR stations and fetched using the same API. The resulting HF ceilometer observations
-        may be more prone to overall cloud status mischaracterization in patchy cloud conditions than the hourly METAR
-        data since each HF observation is the result of only a 5 minute collection of vertical point measurements with
-        standard, non-weighted averaging.
-      </p>
-
-      <br>
-      <h3 id="titlePressure"></h3>
-      <div id="plotPressure"></div>
-
-      <br>
-      <h3 id="titleWind"></h3>
-      <div id="plotWind"></div>
-
-      <br>
-      <h3 id="titleTemp"></h3>
-      <div id="plotTemp"></div>
-
-      <br>
-      <br>
-      <b>Meteorological Plot Information</b>
-
-      <p>
-        Wind direction is plotted as 0 by default if the corresponding wind speed is zero.
-      </p>
-
-      <br>
-      <h3>Decoded METAR Stream</h3>
-      <pre id="decoded"></pre>
-
-      <br>
-      <h3>Synoptic HFMETAR Data Request</h3>
-      <div id="status3"></div>
-
-      <br>
-      <h3>Synoptic HFMETAR Data Response</h3>
-      <pre id="raw3"></pre>
-
-      <br>
-      <b>Data Disclaimer</b>
-
-      <p>
-        This website was made by Nick Statom of the <a href="https://airsea.ucsd.edu/" target="_blank"
-          rel="noopener noreferrer">Air-Sea Interaction Lab</a> at Scripps Institution of Oceanography and is not
-        actively monitored and only occasionally updated. Users who utilize this site's data assume all risk and
-        responsibility. Data outages may occur occasionally due to changes in the source API or data storage server
-        status.
-      </p>
-
-      <script>
-
-        const SYNOPTIC_URL = "https://synoptic-fetch.nstatom.workers.dev/";
-
-        // ---------------- RUN ----------------
-
-        async function run() {
-
-          let icao = document.getElementById("icao").value.toUpperCase();
-          let hours = parseInt(document.getElementById("hours").value) || 24;
-          let sizes = getMarkerSizes(hours);
-
-          try {
-            localStorage.setItem("icao", icao);
-            localStorage.setItem("hours", hours);
-          } catch (e) {
-            console.warn("localStorage unavailable");
-          }
-
-          // enforce max
-          if (hours > 168) {
-            hours = 168;
-            document.getElementById("hours").value = 168;
-          }
-
-
-          // ---------------- Synoptic FETCH ----------------
-
-          const synopticUrl = `${SYNOPTIC_URL}?station=${icao}&hours=${hours}`;
-
-          try {
-
-            const r3 = await fetch(synopticUrl);
-
-            document.getElementById("status3").innerHTML =
-              "Status: " + r3.status;
-
-            // ✅ FIX #1: check response BEFORE parsing JSON
-            if (!r3.ok) {
-              document.getElementById("status3").innerHTML +=
-                "<br><span class='error'>HTTP error</span>";
-
-              const text = await r3.text();   // read raw response
-              console.error("Non-200 response:", text);
-
-              return;
-            }
-
-            const json3 = await r3.json();
-
-            // FIX #2
-            console.log("RAW json3:", json3);
-            console.log("timeseries:", json3?.timeseries);
-            console.log("data:", json3?.timeseries?.data);
-
-            // --- Airport Info ---
-            //const ts = json3;        // 👈 entire object IS your timeseries
-            //const data = json3?.data;
-            const ts = json3?.timeseries;
-            const data = ts?.data;
-
-            if (!Array.isArray(data)) {
-              document.getElementById("status3").innerHTML +=
-                "<br><span class='error'>Invalid Synoptic data</span>";
-              console.error("Bad structure:", json3);
-              return;
-            }
-
-            //const station = json3?.station;
-            const station = ts?.station;
-            const lat = station?.lat;
-            const lon = station?.lon;
-            const alt = station?.elev;
-
-            plotMap(ts?.station, json3?.nearby);
-
-            if (lat !== undefined && lon !== undefined) {
-              document.getElementById("airportInfo").innerHTML = `
-    <b>${icao} Airport Information:</b>
-    Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
-    <br>
-  `;
-            }
-
-            // show raw response
-            document.getElementById("raw3").textContent =
-              JSON.stringify(json3, null, 2);
-
-            console.log("Synoptic:", json3);
-
-            // validate
-            if (!Array.isArray(data)) {
-              document.getElementById("status3").innerHTML +=
-                "<br><span class='error'>Invalid Synoptic data</span>";
-              console.error("Bad structure:", json3);
-              return;
-            }
-
-            // ---- ADD THIS RIGHT HERE ----
-            let decodedLines = data.map(m => formatMetarString(m, icao));
-            decodedLines.reverse();
-
-            document.getElementById("decoded").textContent =
-              decodedLines.join("\n");
-
-            // title
-            document.getElementById("titleSynoptic").innerText =
-              `${icao} ${hours} hr Low Cloud Profile (0 - 3,000 ft)`;
-
-            // plot
-            plotSynoptic(data, icao, sizes, hours);
-
-
-          } catch (err) {
-
-            document.getElementById("status3").innerHTML +=
-              "<br><span class='error'>Download failed</span>";
-
-            console.error(err);
-
-          }
-
-        }
-
-
-        // ------------ IFR Color Helper --------------
-        function getIFRColor(ifr) {
-          switch (ifr) {
-            case "LIFR": return "purple";
-            case "IFR": return "red";
-            case "MVFR": return "blue";
-            case "VFR": return "green";
-            default: return "gray";
-          }
-        }
-
-        // ------------Marker size lookup table--------------
-        function getMarkerSizes(hours) {
-          if (hours > 71) return { big: 14, small: 7 };
-          else if (hours > 23) return { big: 15, small: 8 };
-          else if (hours > 11) return { big: 16, small: 9 };
-          else if (hours > 5) return { big: 17, small: 10 };
-          else return { big: 18, small: 11 };
-        }
-
-        // ------------METAR String Formatter--------------
-        function formatMetarString(m, icao) {
-
-          const t = new Date(m.time * 1000);
-          const utc = t.getUTCHours().toString().padStart(2, "0") +
-            t.getUTCMinutes().toString().padStart(2, "0");
-
-          const source = (m.source === "HF") ? "HF METAR" : "STD METAR";
-
-          // IFR category
-          const category = m.ifr || "UNK";
-
-          // Clouds
-          let cloudStr = "None";
-          if (m.clouds && m.clouds.length > 0) {
-            cloudStr = m.clouds
-              .map(c => `${c.cover} ${c.base}ft`)
-              .join(", ");
-          }
-
-          // Wind
-          const wind = (m.wind_speed !== null && m.wind_dir !== null)
-            ? `${m.wind_speed} kt from ${m.wind_dir} deg`
-            : "N/A";
-
-          // Visibility
-          const viz = (m.visibility !== null && m.visibility !== undefined)
-            ? `${m.visibility} sm`
-            : "N/A";
-
-          // Pressure
-          const pressure = (m.pressure !== null)
-            ? `${m.pressure} in`
-            : "N/A";
-
-          // Temps
-          const temp = (m.temp !== undefined)
-            ? `${m.temp} C`
-            : "N/A";
-
-          const dewpoint = (m.dewpoint !== undefined)
-            ? `${m.dewpoint} C`
-            : "N/A";
-
-          return `${icao} ${utc} UTC: ${category} (${source}); Clouds: ${cloudStr}; Wind: ${wind}; Viz: ${viz}; Press: ${pressure}; Temp: ${temp}; Dewp: ${dewpoint};`;
-        }
-
-        function plotMap(station, nearby) {
-
-          if (!station || !nearby) return;
-
-          // remove old map if rerunning
-          if (window.mapInstance) {
-            window.mapInstance.remove();
-          }
-
-          // center on main station
-          const map = L.map('map').setView([station.lat, station.lon], 9);
-          window.mapInstance = map;
-
-          // base layer
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-          }).addTo(map);
-
-          // main airport marker
-          L.marker([station.lat, station.lon])
-            .addTo(map)
-            .bindPopup(`<b>Main Station</b><br>Lat: ${station.lat}<br>Lon: ${station.lon}`);
-
-          // nearby markers
-          nearby.forEach(s => {
-
-            const t = new Date(s.time * 1000);
-            const timeStr =
-              t.getUTCHours().toString().padStart(2, "0") +
-              t.getUTCMinutes().toString().padStart(2, "0") + "Z";
-
-            const cloudStr = (s.clouds && s.clouds.length)
-              ? s.clouds.map(c => `${c.cover}${c.base}`).join(" ")
-              : "SKC";
-
-            const label = `${s.stid} ${timeStr} (${s.ifr || "UNK"}) ${cloudStr}`;
-
-            // ✅ FIX IS HERE
-            const color = getIFRColor(s.ifr);
-
-            L.circleMarker([s.lat, s.lon], {
-              radius: 6,
-              color: color,
-              fillColor: color,
-              fillOpacity: 0.9
-            })
-              .addTo(map)
-              .bindTooltip(label, {
-                permanent: true,
-                direction: "right",
-                offset: [8, 0],
-                className: "map-label"
-              });
-
-          });
-
-        }
-
-        // ---------------- PLOT Synoptic Full Range ----------------
-        function plotSynoptic(data, icao, sizes, hours) {
-
-          let traces = {
-            SKC_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "SKC (STD)",
-              marker: { color: "yellow", size: sizes.big, symbol: "circle", opacity: 1 }
-            },
-
-            FEW_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "FEW (STD)",
-              marker: { color: "green", size: sizes.big, symbol: "circle", opacity: 1 }
-            },
-
-            SCT_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "SCT (STD)",
-              marker: { color: "blue", size: sizes.big, symbol: "circle", opacity: 1 }
-            },
-
-            BKN_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "BKN (STD)",
-              marker: { color: "red", size: sizes.big, symbol: "circle", opacity: 1 }
-            },
-
-            OVC_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "OVC/VV (STD)",
-              marker: { color: "black", size: sizes.big, symbol: "circle", opacity: 1 }
-            },
-
-            VV_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "OVC/VV (STD)",
-              marker: { color: "black", size: sizes.big, symbol: "circle", opacity: 1 }
-            },
-
-            LIFR_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "LIFR (STD)",
-              marker: { color: "purple", size: sizes.big, symbol: "square", opacity: 1 }
-            },
-
-            IFR_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "IFR (STD)",
-              marker: { color: "red", size: sizes.big, symbol: "square", opacity: 1 }
-            },
-
-            MVFR_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "MVFR (STD)",
-              marker: { color: "blue", size: sizes.big, symbol: "square", opacity: 1 }
-            },
-
-            VFR_STD: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "VFR (STD)",
-              marker: { color: "green", size: sizes.big, symbol: "square", opacity: 1 }
-            },
-
-            SKC_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "SKC (HF)",
-              marker: { color: "yellow", size: sizes.small, symbol: "circle-open", opacity: 1 }
-            },
-
-            FEW_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "FEW (HF)",
-              marker: { color: "green", size: sizes.small, symbol: "circle-open", opacity: 1 }
-            },
-
-            SCT_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "SCT (HF)",
-              marker: { color: "blue", size: sizes.small, symbol: "circle-open", opacity: 1 }
-            },
-
-            BKN_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "BKN (HF)",
-              marker: { color: "red", size: sizes.small, symbol: "circle-open", opacity: 1 }
-            },
-
-            OVC_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "OVC/VV (HF)",
-              marker: { color: "black", size: sizes.small, symbol: "circle-open", opacity: 1 }
-            },
-
-            VV_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "OVC/VV (HF)",
-              marker: { color: "black", size: sizes.small, symbol: "circle-open", opacity: 1 }
-            },
-
-            LIFR_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "LIFR (HF)",
-              marker: { color: "purple", size: sizes.small, symbol: "square-open", opacity: 1 }
-            },
-
-            IFR_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "IFR (HF)",
-              marker: { color: "red", size: sizes.small, symbol: "square-open", opacity: 1 }
-            },
-
-            MVFR_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "MVFR (HF)",
-              marker: { color: "blue", size: sizes.small, symbol: "square-open", opacity: 1 }
-            },
-
-            VFR_HF: {
-              x: [], y: [], mode: "markers", type: "scattergl", name: "VFR (HF)",
-              marker: { color: "green", size: sizes.small, symbol: "square-open", opacity: 1 }
-            }
-          };
-
-          //----------------- Wind Plot-----------------
-          document.getElementById("titleWind").innerText =
-            `${icao} ${hours} hr Wind Speed & Direction`;
-
-          let maxHeight = -1000;
-
-          data.forEach(m => {
-
-            let t = new Date(m.time * 1000);
-            let isHF = (m.source === "HF");
-
-            // --- IFR category ---
-            if (m.ifr) {
-              let key = `${m.ifr}_${isHF ? "HF" : "STD"}`;
-              if (traces[key]) {
-                traces[key].x.push(t);
-                traces[key].y.push(-150);
-              }
-            }
-
-            // --- SKC ---
-            if (!m.clouds || m.clouds.length === 0) {
-              let key = isHF ? "SKC_HF" : "SKC_STD";
-              if (traces[key]) {
-                traces[key].x.push(t);
-                traces[key].y.push(0);
-              }
-              return;
-            }
-
-            // --- Cloud layers ---
-            m.clouds.forEach(c => {
-
-              if (c.base === null || c.base === undefined) return;
-
-              let base = c.base;
-              let cover = c.cover;
-              let key = cover + (isHF ? "_HF" : "_STD");
-
-              if (base > maxHeight) maxHeight = base + 1000;
-
-              if (traces[key]) {
-                traces[key].x.push(t);
-                traces[key].y.push(base);
-              }
-
-            });
-
-          });
-
-          //----------------- Pressure + Visibility Plot-----------------
-          document.getElementById("titlePressure").innerText =
-            `${icao} ${hours} hr Pressure & Visibility`;
-
-          let pressure_STD = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Pressure STD",
-            marker: { size: sizes.big, color: "black", symbol: "circle" }, cliponaxis: false
-          };
-
-          let pressure_HF = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Pressure HF",
-            marker: { size: sizes.small, color: "black", symbol: "circle-open" }, cliponaxis: false
-          };
-
-          let vis_STD = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Visibility STD", yaxis: "y2",
-            marker: { size: sizes.big, color: "blue", symbol: "circle" }, cliponaxis: false
-          };
-
-          let vis_HF = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Visibility HF", yaxis: "y2",
-            marker: { size: sizes.small, color: "blue", symbol: "circle-open" }, cliponaxis: false
-          };
-
-          data.forEach(m => {
-
-            const t = new Date(m.time * 1000);
-            const isHF = (m.source === "HF");
-
-            // --- Pressure ---
-            if (m.pressure !== null && m.pressure !== undefined) {
-              if (isHF) {
-                pressure_HF.x.push(t);
-                pressure_HF.y.push(Number(m.pressure));
-              } else {
-                pressure_STD.x.push(t);
-                pressure_STD.y.push(Number(m.pressure));
-              }
-            }
-
-            // --- Visibility ---
-            if (m.visibility !== null && m.visibility !== undefined) {
-              if (isHF) {
-                vis_HF.x.push(t);
-                vis_HF.y.push(Number(m.visibility));
-              } else {
-                vis_STD.x.push(t);
-                vis_STD.y.push(Number(m.visibility));
-              }
-            }
-
-          });
-
-          // ---- Match gridline counts between axes (same trick as wind) ----
-          const allPressure = [...pressure_STD.y, ...pressure_HF.y];
-          const allVis = [...vis_STD.y, ...vis_HF.y];
-
-          const pressureMin = allPressure.length ? Math.min(...allPressure) : 0;
-          const pressureMax = allPressure.length ? Math.max(...allPressure) : 1;
-
-          const visMin = 0;
-          const visMax = allVis.length ? Math.max(...allVis) : 1;
-
-          const nTicks = 6;
-
-          const pressureDtick = (pressureMax - pressureMin) / (nTicks - 1);
-          const visDtick = (visMax - visMin) / (nTicks - 1);
-
-          Plotly.newPlot("plotPressure",
-            [pressure_STD, pressure_HF, vis_STD, vis_HF],
-            {
-              margin: { l: 50, r: 50, t: 20, b: 40 },
-
-              xaxis: {
-                title: "Local Time",
-                type: "date"
-              },
-
-              yaxis: {
-                title: "Sea Level Pressure (kPa) & Visibility (nm)",
-                range: [pressureMin, pressureMax],
-                dtick: pressureDtick
-              },
-
-              yaxis2: {
-                title: "Visibility (nm)",
-                overlaying: "y",
-                side: "right",
-                range: [visMin, visMax],
-                dtick: visDtick
-              },
-
-              legend: { orientation: "h" }
-            },
-            { displaylogo: false }
-          );
-
-          let windSpeed_STD = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Wind Speed STD",
-            marker: { size: sizes.big, color: "black", symbol: "circle" }, cliponaxis: false
-          };
-
-          let windSpeed_HF = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Wind Speed HF",
-            marker: { size: sizes.small, color: "black", symbol: "circle-open" }, cliponaxis: false
-          };
-
-          let windDir_STD = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Wind Dir STD", yaxis: "y2",
-            marker: { size: sizes.big, color: "blue", symbol: "circle" }, cliponaxis: false
-          };
-
-          let windDir_HF = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Wind Dir HF", yaxis: "y2",
-            marker: { size: sizes.small, color: "blue", symbol: "circle-open" }, cliponaxis: false
-          };
-
-          data.forEach(m => {
-
-            const t = new Date(m.time * 1000);
-            const isHF = (m.source === "HF");
-
-            if (m.wind_speed !== null && m.wind_speed !== undefined && m.wind_dir !== null && m.wind_dir !== undefined) {
-
-              if (isHF) {
-                windSpeed_HF.x.push(t);
-                windSpeed_HF.y.push(Number(m.wind_speed));
-
-                windDir_HF.x.push(t);
-                windDir_HF.y.push(Number(m.wind_dir));
-              } else {
-                windSpeed_STD.x.push(t);
-                windSpeed_STD.y.push(Number(m.wind_speed));
-
-                windDir_STD.x.push(t);
-                windDir_STD.y.push(Number(m.wind_dir));
-              }
-            }
-          });
-
-          Plotly.newPlot("plotWind",
-            [windSpeed_STD, windSpeed_HF, windDir_STD, windDir_HF],
-            {
-              margin: { l: 50, r: 50, t: 20, b: 40 },
-
-              xaxis: {
-                title: "Local Time",
-                type: "date"
-              },
-
-              yaxis: {
-                title: "Wind Speed (kt)",
-                rangemode: "tozero",
-                autorange: true
-              },
-
-              yaxis2: {
-                title: "Wind Direction (deg)",
-                overlaying: "y",
-                side: "right",
-                range: [0, 360],
-                autorange: false
-              },
-
-              legend: { orientation: "h" }
-            },
-            { displaylogo: false }
-          );
-
-          // convert traces object → array
-          let plotTraces = Object.values(traces);
-
-          // remove empty traces (clean legend)
-          plotTraces = plotTraces.filter(tr => tr.x.length > 0);
-
-          //----------------- Temperatue Plot-----------------
-          document.getElementById("titleTemp").innerText =
-            `${icao} ${hours} hr Temperature & Dewpoint`;
-
-          let Temp_STD = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Temperature STD",
-            marker: { size: sizes.big, color: "red", symbol: "circle" }, cliponaxis: false
-          };
-
-          let Temp_HF = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Temperature HF",
-            marker: { size: sizes.small, color: "red", symbol: "circle-open" }, cliponaxis: false
-          };
-
-          let Dewp_STD = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Dewpoint STD",
-            marker: { size: sizes.big, color: "blue", symbol: "circle" }, cliponaxis: false
-          };
-
-          let Dewp_HF = {
-            x: [], y: [], mode: "markers", type: "scattergl", name: "Dewpoint HF",
-            marker: { size: sizes.small, color: "blue", symbol: "circle-open" }, cliponaxis: false
-          };
-
-          data.forEach(m => {
-
-            const t = new Date(m.time * 1000);
-            const isHF = (m.source === "HF");
-
-            if (m.temp !== null && m.temp !== undefined) {
-              if (isHF) {
-                Temp_HF.x.push(t);
-                Temp_HF.y.push(Number(m.temp));
-              } else {
-                Temp_STD.x.push(t);
-                Temp_STD.y.push(Number(m.temp));
-              }
-            }
-
-            if (m.dewpoint !== null && m.dewpoint !== undefined) {
-              if (isHF) {
-                Dewp_HF.x.push(t);
-                Dewp_HF.y.push(Number(m.dewpoint));
-              } else {
-                Dewp_STD.x.push(t);
-                Dewp_STD.y.push(Number(m.dewpoint));
-              }
-            }
-          });
-
-          let allVals = [];
-
-          // include BOTH temp and dewpoint in one pass
-          for (let m of data) {
-            if (m.temp !== null && m.temp !== undefined) allVals.push(m.temp);
-            if (m.dewpoint !== null && m.dewpoint !== undefined) allVals.push(m.dewpoint);
-          }
-
-          //const minY = Math.min(...allVals);
-          //const maxY = Math.max(...allVals);
-          //const pad = (maxY - minY) * 0.1 || 1;
-          //const yRange = [yMin - pad, yMax + pad];
-
-          //// THIS is the key trick:
-          //const boundsTrace = {
-          //  x: [null, null],
-          //  y: [minY - pad, maxY + pad],
-          //  mode: "lines",
-          //  line: {opacity: 0},
-          //  hoverinfo: "skip",
-          //  showlegend: false
-          //};
-
-          Plotly.newPlot("plotTemp",
-            [Temp_STD, Temp_HF, Dewp_STD, Dewp_HF],
-            {
-              margin: { l: 50, r: 50, t: 20, b: 40 },
-
-              xaxis: {
-                title: "Local Time",
-                type: "date"
-              },
-
-              yaxis: {
-                title: "Temperature & Dewpoint (°F)",
-                //range: yRange,
-                autorange: true
-              },
-
-              legend: { orientation: "h" }
-            },
-            { displaylogo: false }
-          );
-
-          // -------- CREATE FULL-RANGE COPY --------
-          let plotTracesFull = plotTraces.map(tr => {
-            // deep-ish copy
-            let newTrace = {
-              ...tr,
-              x: [...tr.x],
-              y: [...tr.y]
-            };
-
-            // shift IFR points lower (they are negative values)
-            newTrace.y = newTrace.y.map(y => (y < 0 ? -1500 : y));
-
-            return newTrace;
-          });
-
-          if (plotTraces.length === 0) {
-            document.getElementById("plotSynoptic").innerHTML = "No cloud data available";
-            return;
-          }
-
-          Plotly.newPlot("plotSynoptic", plotTraces, {
-
-            margin: { l: 50, r: 20, t: 20, b: 40 },
-
-            xaxis: {
-              title: "Local Time",
-              type: "date"
-            },
-
-            yaxis: {
-              title: "Cloud Base AGL [ft]",
-              range: [-300, 3150]
-            }
-
-          }, { displaylogo: false });
-
-          // -------- SECOND PLOT (FULL RANGE) --------
-
-          document.getElementById("titleSynopticFull").innerText =
-            `${icao} ${hours} hr Full Cloud Profile (0 - 30,000 ft)`;
-
-
-          Plotly.newPlot("plotSynopticFull", plotTracesFull, {
-
-            margin: { l: 50, r: 20, t: 20, b: 40 },
-
-            xaxis: {
-              title: "Local Time",
-              type: "date"
-            },
-
-            yaxis: {
-              title: "Cloud Base AGL [ft]",
-              range: [-3000, 31500]
-            }
-
-          }, { displaylogo: false });
-
-        }
-
-        // ---------------- INIT ----------------
-
-        let savedIcao = null;
-        let savedHours = null;
+    </h1>
+
+    <label>Airport ICAO Code:</label>
+    <input id="icao" value="KSAN" />
+
+    &nbsp;&nbsp;
+
+    <label>Prior Hours to Display:</label>
+    <input id="hours" value="24" />
+    <button onclick="run()">Update</button>
+
+    <br />
+    <br />
+    <div id="airportInfo" style="margin-top: 10px"></div>
+
+    <br />
+    <h3 id="titleSynoptic"></h3>
+    <div id="plotSynoptic"></div>
+
+    <br />
+    <h3 id="titleSynopticFull"></h3>
+    <div id="plotSynopticFull"></div>
+
+    <br />
+    <h3>Latest Cloud Data at Nearby Airports (< 50 mile radius)</h3>
+    <div id="map" style="height: 400px; border: 2px solid #444"></div>
+
+    <br />
+    <br />
+    <b>Cloud Height Plot Information</b>
+
+    <p>
+      Currently the plots can contain up to 168 hours (1 week) of METAR data
+      from standard ASOS/AWOS stations at a given ICAO airport code. Plotted
+      cloud heights are in reference to the airport ground elevation and rounded
+      to the nearest 100 ft. Add the specific airport elevation listed above to
+      get cloud heights in reference to MSL. Clear sky conditions (yellow
+      circles) are plotted at 0 ft elevation and the flight rules category is
+      plotted at a negative elevation arbitrarily (color coded squares) for
+      quick referencing. Note that lower level cloudy conditions (especially
+      overcast) can obscure higher elevation clouds from being detected by the
+      airport's ceilometer.
+    </p>
+    <p>
+      Hourly cloud data ('STD', larger filled icons) are based on standard
+      airport METAR readings that are fetched using the
+      <a
+        href="https://synopticdata.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Synoptic Data</a
+      >
+      API. These observations average the past 30 minutes of airport ceilometer
+      data with double weighting for the last 10 minutes of passing sky
+      condition observations. High frequency cloud data ('HF', smaller unfilled
+      icons) are generated from the same METAR stations and fetched using the
+      same API. The resulting HF ceilometer observations may be more prone to
+      overall cloud status mischaracterization in patchy cloud conditions than
+      the hourly METAR data since each HF observation is the result of only a 5
+      minute collection of vertical point measurements with standard,
+      non-weighted averaging.
+    </p>
+
+    <br />
+    <h3 id="titlePressure"></h3>
+    <div id="plotPressure"></div>
+
+    <br />
+    <h3 id="titleWind"></h3>
+    <div id="plotWind"></div>
+
+    <br />
+    <h3 id="titleTemp"></h3>
+    <div id="plotTemp"></div>
+
+    <br />
+    <br />
+    <b>Meteorological Plot Information</b>
+
+    <p>
+      Wind direction is plotted as 0 by default if the corresponding wind speed
+      is zero.
+    </p>
+
+    <br />
+    <h3>Decoded METAR Stream</h3>
+    <pre id="decoded"></pre>
+
+    <br />
+    <h3>Synoptic HFMETAR Data Request</h3>
+    <div id="status3"></div>
+
+    <br />
+    <h3>Synoptic HFMETAR Data Response</h3>
+    <pre id="raw3"></pre>
+
+    <br />
+    <b>Data Disclaimer</b>
+
+    <p>
+      This website was made by Nick Statom of the
+      <a
+        href="https://airsea.ucsd.edu/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Air-Sea Interaction Lab</a
+      >
+      at Scripps Institution of Oceanography and is not actively monitored and
+      only occasionally updated. Users who utilize this site's data assume all
+      risk and responsibility. Data outages may occur occasionally due to
+      changes in the source API or data storage server status.
+    </p>
+
+    <script>
+      const SYNOPTIC_URL = "https://synoptic-fetch.nstatom.workers.dev/";
+
+      // ---------------- RUN ----------------
+
+      async function run() {
+        let icao = document.getElementById("icao").value.toUpperCase();
+        let hours = parseInt(document.getElementById("hours").value) || 24;
+        let sizes = getMarkerSizes(hours);
 
         try {
-          savedIcao = localStorage.getItem("icao");
-          savedHours = localStorage.getItem("hours");
+          localStorage.setItem("icao", icao);
+          localStorage.setItem("hours", hours);
         } catch (e) {
           console.warn("localStorage unavailable");
         }
 
-        if (savedIcao) {
-          document.getElementById("icao").value = savedIcao;
+        // enforce max
+        if (hours > 168) {
+          hours = 168;
+          document.getElementById("hours").value = 168;
         }
 
-        if (savedHours) {
-          document.getElementById("hours").value = savedHours;
+        // ---------------- Synoptic FETCH ----------------
+
+        const synopticUrl = `${SYNOPTIC_URL}?station=${icao}&hours=${hours}`;
+
+        try {
+          const r3 = await fetch(synopticUrl);
+
+          document.getElementById("status3").innerHTML = "Status: " + r3.status;
+
+          // ✅ FIX #1: check response BEFORE parsing JSON
+          if (!r3.ok) {
+            document.getElementById("status3").innerHTML +=
+              "<br><span class='error'>HTTP error</span>";
+
+            const text = await r3.text(); // read raw response
+            console.error("Non-200 response:", text);
+
+            return;
+          }
+
+          const json3 = await r3.json();
+
+          // FIX #2
+          console.log("RAW json3:", json3);
+          console.log("timeseries:", json3?.timeseries);
+          console.log("data:", json3?.timeseries?.data);
+
+          // --- Airport Info ---
+          //const ts = json3;        // 👈 entire object IS your timeseries
+          //const data = json3?.data;
+          const ts = json3?.timeseries;
+          const data = ts?.data;
+
+          if (!Array.isArray(data)) {
+            document.getElementById("status3").innerHTML +=
+              "<br><span class='error'>Invalid Synoptic data</span>";
+            console.error("Bad structure:", json3);
+            return;
+          }
+
+          //const station = json3?.station;
+          const station = ts?.station;
+          const lat = station?.lat;
+          const lon = station?.lon;
+          const alt = station?.elev;
+
+          plotMap(ts?.station, json3?.nearby);
+
+          if (lat !== undefined && lon !== undefined) {
+            document.getElementById("airportInfo").innerHTML = `
+    <b>${icao} Airport Information:</b>
+    Latitude = ${lat}, Longitude = ${lon}, Elevation = ${alt} ft.
+    <br>
+  `;
+          }
+
+          // show raw response
+          document.getElementById("raw3").textContent = JSON.stringify(
+            json3,
+            null,
+            2,
+          );
+
+          console.log("Synoptic:", json3);
+
+          // validate
+          if (!Array.isArray(data)) {
+            document.getElementById("status3").innerHTML +=
+              "<br><span class='error'>Invalid Synoptic data</span>";
+            console.error("Bad structure:", json3);
+            return;
+          }
+
+          // ---- ADD THIS RIGHT HERE ----
+          let decodedLines = data.map((m) => formatMetarString(m, icao));
+          decodedLines.reverse();
+
+          document.getElementById("decoded").textContent =
+            decodedLines.join("\n");
+
+          // title
+          document.getElementById("titleSynoptic").innerText =
+            `${icao} ${hours} hr Low Cloud Profile (0 - 3,000 ft)`;
+
+          // plot
+          plotSynoptic(data, icao, sizes, hours);
+        } catch (err) {
+          document.getElementById("status3").innerHTML +=
+            "<br><span class='error'>Download failed</span>";
+
+          console.error(err);
+        }
+      }
+
+      // ------------ IFR Color Helper --------------
+      function getIFRColor(ifr) {
+        switch (ifr) {
+          case "LIFR":
+            return "purple";
+          case "IFR":
+            return "red";
+          case "MVFR":
+            return "blue";
+          case "VFR":
+            return "green";
+          default:
+            return "gray";
+        }
+      }
+
+      // ------------Marker size lookup table--------------
+      function getMarkerSizes(hours) {
+        if (hours > 71) return { big: 14, small: 7 };
+        else if (hours > 23) return { big: 15, small: 8 };
+        else if (hours > 11) return { big: 16, small: 9 };
+        else if (hours > 5) return { big: 17, small: 10 };
+        else return { big: 18, small: 11 };
+      }
+
+      // ------------METAR String Formatter--------------
+      function formatMetarString(m, icao) {
+        const t = new Date(m.time * 1000);
+        const utc =
+          t.getUTCHours().toString().padStart(2, "0") +
+          t.getUTCMinutes().toString().padStart(2, "0");
+
+        const source = m.source === "HF" ? "HF METAR" : "STD METAR";
+
+        // IFR category
+        const category = m.ifr || "UNK";
+
+        // Clouds
+        let cloudStr = "None";
+        if (m.clouds && m.clouds.length > 0) {
+          cloudStr = m.clouds.map((c) => `${c.cover} ${c.base}ft`).join(", ");
         }
 
-        run();
+        // Wind
+        const wind =
+          m.wind_speed !== null && m.wind_dir !== null
+            ? `${m.wind_speed} kt from ${m.wind_dir} deg`
+            : "N/A";
 
-      </script>
+        // Visibility
+        const viz =
+          m.visibility !== null && m.visibility !== undefined
+            ? `${m.visibility} sm`
+            : "N/A";
 
-</body>
+        // Pressure
+        const pressure = m.pressure !== null ? `${m.pressure} in` : "N/A";
 
+        // Temps
+        const temp = m.temp !== undefined ? `${m.temp} C` : "N/A";
+
+        const dewpoint = m.dewpoint !== undefined ? `${m.dewpoint} C` : "N/A";
+
+        return `${icao} ${utc} UTC: ${category} (${source}); Clouds: ${cloudStr}; Wind: ${wind}; Viz: ${viz}; Press: ${pressure}; Temp: ${temp}; Dewp: ${dewpoint};`;
+      }
+
+      function plotMap(station, nearby) {
+        if (!station || !nearby) return;
+
+        // remove old map if rerunning
+        if (window.mapInstance) {
+          window.mapInstance.remove();
+        }
+
+        // center on main station
+        const map = L.map("map").setView([station.lat, station.lon], 9);
+        window.mapInstance = map;
+
+        // base layer
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap",
+        }).addTo(map);
+
+        // main airport marker
+        L.marker([station.lat, station.lon])
+          .addTo(map)
+          .bindPopup(
+            `<b>Main Station</b><br>Lat: ${station.lat}<br>Lon: ${station.lon}`,
+          );
+
+        // nearby markers
+        nearby.forEach((s) => {
+          const t = new Date(s.time * 1000);
+          const timeStr =
+            t.getUTCHours().toString().padStart(2, "0") +
+            t.getUTCMinutes().toString().padStart(2, "0") +
+            "Z";
+
+          const cloudStr =
+            s.clouds && s.clouds.length
+              ? s.clouds.map((c) => `${c.cover}${c.base}`).join(" ")
+              : "SKC";
+
+          const label = `${s.stid} ${timeStr} (${s.ifr || "UNK"}) ${cloudStr}`;
+
+          // ✅ FIX IS HERE
+          const color = getIFRColor(s.ifr);
+
+          L.circleMarker([s.lat, s.lon], {
+            radius: 6,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.9,
+          })
+            .addTo(map)
+            .bindTooltip(label, {
+              permanent: true,
+              direction: "right",
+              offset: [8, 0],
+              className: "map-label",
+            });
+        });
+      }
+
+      // ---------------- PLOT Synoptic Full Range ----------------
+      function plotSynoptic(data, icao, sizes, hours) {
+        let traces = {
+          SKC_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "SKC (STD)",
+            marker: {
+              color: "yellow",
+              size: sizes.big,
+              symbol: "circle",
+              opacity: 1,
+            },
+          },
+
+          FEW_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "FEW (STD)",
+            marker: {
+              color: "green",
+              size: sizes.big,
+              symbol: "circle",
+              opacity: 1,
+            },
+          },
+
+          SCT_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "SCT (STD)",
+            marker: {
+              color: "blue",
+              size: sizes.big,
+              symbol: "circle",
+              opacity: 1,
+            },
+          },
+
+          BKN_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "BKN (STD)",
+            marker: {
+              color: "red",
+              size: sizes.big,
+              symbol: "circle",
+              opacity: 1,
+            },
+          },
+
+          OVC_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "OVC/VV (STD)",
+            marker: {
+              color: "black",
+              size: sizes.big,
+              symbol: "circle",
+              opacity: 1,
+            },
+          },
+
+          VV_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "OVC/VV (STD)",
+            marker: {
+              color: "black",
+              size: sizes.big,
+              symbol: "circle",
+              opacity: 1,
+            },
+          },
+
+          LIFR_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "LIFR (STD)",
+            marker: {
+              color: "purple",
+              size: sizes.big,
+              symbol: "square",
+              opacity: 1,
+            },
+          },
+
+          IFR_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "IFR (STD)",
+            marker: {
+              color: "red",
+              size: sizes.big,
+              symbol: "square",
+              opacity: 1,
+            },
+          },
+
+          MVFR_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "MVFR (STD)",
+            marker: {
+              color: "blue",
+              size: sizes.big,
+              symbol: "square",
+              opacity: 1,
+            },
+          },
+
+          VFR_STD: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "VFR (STD)",
+            marker: {
+              color: "green",
+              size: sizes.big,
+              symbol: "square",
+              opacity: 1,
+            },
+          },
+
+          SKC_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "SKC (HF)",
+            marker: {
+              color: "yellow",
+              size: sizes.small,
+              symbol: "circle-open",
+              opacity: 1,
+            },
+          },
+
+          FEW_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "FEW (HF)",
+            marker: {
+              color: "green",
+              size: sizes.small,
+              symbol: "circle-open",
+              opacity: 1,
+            },
+          },
+
+          SCT_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "SCT (HF)",
+            marker: {
+              color: "blue",
+              size: sizes.small,
+              symbol: "circle-open",
+              opacity: 1,
+            },
+          },
+
+          BKN_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "BKN (HF)",
+            marker: {
+              color: "red",
+              size: sizes.small,
+              symbol: "circle-open",
+              opacity: 1,
+            },
+          },
+
+          OVC_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "OVC/VV (HF)",
+            marker: {
+              color: "black",
+              size: sizes.small,
+              symbol: "circle-open",
+              opacity: 1,
+            },
+          },
+
+          VV_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "OVC/VV (HF)",
+            marker: {
+              color: "black",
+              size: sizes.small,
+              symbol: "circle-open",
+              opacity: 1,
+            },
+          },
+
+          LIFR_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "LIFR (HF)",
+            marker: {
+              color: "purple",
+              size: sizes.small,
+              symbol: "square-open",
+              opacity: 1,
+            },
+          },
+
+          IFR_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "IFR (HF)",
+            marker: {
+              color: "red",
+              size: sizes.small,
+              symbol: "square-open",
+              opacity: 1,
+            },
+          },
+
+          MVFR_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "MVFR (HF)",
+            marker: {
+              color: "blue",
+              size: sizes.small,
+              symbol: "square-open",
+              opacity: 1,
+            },
+          },
+
+          VFR_HF: {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scattergl",
+            name: "VFR (HF)",
+            marker: {
+              color: "green",
+              size: sizes.small,
+              symbol: "square-open",
+              opacity: 1,
+            },
+          },
+        };
+
+        //----------------- Wind Plot-----------------
+        document.getElementById("titleWind").innerText =
+          `${icao} ${hours} hr Wind Speed & Direction`;
+
+        let maxHeight = -1000;
+
+        data.forEach((m) => {
+          let t = new Date(m.time * 1000);
+          let isHF = m.source === "HF";
+
+          // --- IFR category ---
+          if (m.ifr) {
+            let key = `${m.ifr}_${isHF ? "HF" : "STD"}`;
+            if (traces[key]) {
+              traces[key].x.push(t);
+              traces[key].y.push(-150);
+            }
+          }
+
+          // --- SKC ---
+          if (!m.clouds || m.clouds.length === 0) {
+            let key = isHF ? "SKC_HF" : "SKC_STD";
+            if (traces[key]) {
+              traces[key].x.push(t);
+              traces[key].y.push(0);
+            }
+            return;
+          }
+
+          // --- Cloud layers ---
+          m.clouds.forEach((c) => {
+            if (c.base === null || c.base === undefined) return;
+
+            let base = c.base;
+            let cover = c.cover;
+            let key = cover + (isHF ? "_HF" : "_STD");
+
+            if (base > maxHeight) maxHeight = base + 1000;
+
+            if (traces[key]) {
+              traces[key].x.push(t);
+              traces[key].y.push(base);
+            }
+          });
+        });
+
+        //----------------- Pressure + Visibility Plot-----------------
+        document.getElementById("titlePressure").innerText =
+          `${icao} ${hours} hr Pressure & Visibility`;
+
+        let pressure_STD = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Pressure STD",
+          marker: { size: sizes.big, color: "black", symbol: "circle" },
+          cliponaxis: false,
+        };
+
+        let pressure_HF = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Pressure HF",
+          marker: { size: sizes.small, color: "black", symbol: "circle-open" },
+          cliponaxis: false,
+        };
+
+        let vis_STD = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Visibility STD",
+          yaxis: "y2",
+          marker: { size: sizes.big, color: "blue", symbol: "circle" },
+          cliponaxis: false,
+        };
+
+        let vis_HF = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Visibility HF",
+          yaxis: "y2",
+          marker: { size: sizes.small, color: "blue", symbol: "circle-open" },
+          cliponaxis: false,
+        };
+
+        data.forEach((m) => {
+          const t = new Date(m.time * 1000);
+          const isHF = m.source === "HF";
+
+          // --- Pressure ---
+          if (m.pressure !== null && m.pressure !== undefined) {
+            if (isHF) {
+              pressure_HF.x.push(t);
+              pressure_HF.y.push(Number(m.pressure));
+            } else {
+              pressure_STD.x.push(t);
+              pressure_STD.y.push(Number(m.pressure));
+            }
+          }
+
+          // --- Visibility ---
+          if (m.visibility !== null && m.visibility !== undefined) {
+            if (isHF) {
+              vis_HF.x.push(t);
+              vis_HF.y.push(Number(m.visibility));
+            } else {
+              vis_STD.x.push(t);
+              vis_STD.y.push(Number(m.visibility));
+            }
+          }
+        });
+
+        // ---- Match gridline counts between axes (same trick as wind) ----
+        const allPressure = [...pressure_STD.y, ...pressure_HF.y];
+        const allVis = [...vis_STD.y, ...vis_HF.y];
+
+        const pressureMin = allPressure.length ? Math.min(...allPressure) : 0;
+        const pressureMax = allPressure.length ? Math.max(...allPressure) : 1;
+
+        const visMin = 0;
+        const visMax = allVis.length ? Math.max(...allVis) : 1;
+
+        const nTicks = 6;
+
+        const pressureDtick = (pressureMax - pressureMin) / (nTicks - 1);
+        const visDtick = (visMax - visMin) / (nTicks - 1);
+
+        Plotly.newPlot(
+          "plotPressure",
+          [pressure_STD, pressure_HF, vis_STD, vis_HF],
+          {
+            margin: { l: 50, r: 50, t: 20, b: 40 },
+
+            xaxis: {
+              title: "Local Time",
+              type: "date",
+            },
+
+            yaxis: {
+              title: "Sea Level Pressure (kPa) & Visibility (nm)",
+              range: [pressureMin, pressureMax],
+              dtick: pressureDtick,
+            },
+
+            yaxis2: {
+              title: "Visibility (nm)",
+              overlaying: "y",
+              side: "right",
+              range: [visMin, visMax],
+              dtick: visDtick,
+            },
+
+            legend: { orientation: "h" },
+          },
+          { displaylogo: false },
+        );
+
+        let windSpeed_STD = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Wind Speed STD",
+          marker: { size: sizes.big, color: "black", symbol: "circle" },
+          cliponaxis: false,
+        };
+
+        let windSpeed_HF = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Wind Speed HF",
+          marker: { size: sizes.small, color: "black", symbol: "circle-open" },
+          cliponaxis: false,
+        };
+
+        let windDir_STD = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Wind Dir STD",
+          yaxis: "y2",
+          marker: { size: sizes.big, color: "blue", symbol: "circle" },
+          cliponaxis: false,
+        };
+
+        let windDir_HF = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Wind Dir HF",
+          yaxis: "y2",
+          marker: { size: sizes.small, color: "blue", symbol: "circle-open" },
+          cliponaxis: false,
+        };
+
+        data.forEach((m) => {
+          const t = new Date(m.time * 1000);
+          const isHF = m.source === "HF";
+
+          if (
+            m.wind_speed !== null &&
+            m.wind_speed !== undefined &&
+            m.wind_dir !== null &&
+            m.wind_dir !== undefined
+          ) {
+            if (isHF) {
+              windSpeed_HF.x.push(t);
+              windSpeed_HF.y.push(Number(m.wind_speed));
+
+              windDir_HF.x.push(t);
+              windDir_HF.y.push(Number(m.wind_dir));
+            } else {
+              windSpeed_STD.x.push(t);
+              windSpeed_STD.y.push(Number(m.wind_speed));
+
+              windDir_STD.x.push(t);
+              windDir_STD.y.push(Number(m.wind_dir));
+            }
+          }
+        });
+
+        Plotly.newPlot(
+          "plotWind",
+          [windSpeed_STD, windSpeed_HF, windDir_STD, windDir_HF],
+          {
+            margin: { l: 50, r: 50, t: 20, b: 40 },
+
+            xaxis: {
+              title: "Local Time",
+              type: "date",
+            },
+
+            yaxis: {
+              title: "Wind Speed (kt)",
+              rangemode: "tozero",
+              autorange: true,
+            },
+
+            yaxis2: {
+              title: "Wind Direction (deg)",
+              overlaying: "y",
+              side: "right",
+              range: [0, 360],
+              autorange: false,
+            },
+
+            legend: { orientation: "h" },
+          },
+          { displaylogo: false },
+        );
+
+        // convert traces object → array
+        let plotTraces = Object.values(traces);
+
+        // remove empty traces (clean legend)
+        plotTraces = plotTraces.filter((tr) => tr.x.length > 0);
+
+        //----------------- Temperatue Plot-----------------
+        document.getElementById("titleTemp").innerText =
+          `${icao} ${hours} hr Temperature & Dewpoint`;
+
+        let Temp_STD = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Temperature STD",
+          marker: { size: sizes.big, color: "red", symbol: "circle" },
+          cliponaxis: false,
+        };
+
+        let Temp_HF = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Temperature HF",
+          marker: { size: sizes.small, color: "red", symbol: "circle-open" },
+          cliponaxis: false,
+        };
+
+        let Dewp_STD = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Dewpoint STD",
+          marker: { size: sizes.big, color: "blue", symbol: "circle" },
+          cliponaxis: false,
+        };
+
+        let Dewp_HF = {
+          x: [],
+          y: [],
+          mode: "markers",
+          type: "scattergl",
+          name: "Dewpoint HF",
+          marker: { size: sizes.small, color: "blue", symbol: "circle-open" },
+          cliponaxis: false,
+        };
+
+        data.forEach((m) => {
+          const t = new Date(m.time * 1000);
+          const isHF = m.source === "HF";
+
+          if (m.temp !== null && m.temp !== undefined) {
+            if (isHF) {
+              Temp_HF.x.push(t);
+              Temp_HF.y.push(Number(m.temp));
+            } else {
+              Temp_STD.x.push(t);
+              Temp_STD.y.push(Number(m.temp));
+            }
+          }
+
+          if (m.dewpoint !== null && m.dewpoint !== undefined) {
+            if (isHF) {
+              Dewp_HF.x.push(t);
+              Dewp_HF.y.push(Number(m.dewpoint));
+            } else {
+              Dewp_STD.x.push(t);
+              Dewp_STD.y.push(Number(m.dewpoint));
+            }
+          }
+        });
+
+        let allVals = [];
+
+        // include BOTH temp and dewpoint in one pass
+        for (let m of data) {
+          if (m.temp !== null && m.temp !== undefined) allVals.push(m.temp);
+          if (m.dewpoint !== null && m.dewpoint !== undefined)
+            allVals.push(m.dewpoint);
+        }
+
+        //const minY = Math.min(...allVals);
+        //const maxY = Math.max(...allVals);
+        //const pad = (maxY - minY) * 0.1 || 1;
+        //const yRange = [yMin - pad, yMax + pad];
+
+        //// THIS is the key trick:
+        //const boundsTrace = {
+        //  x: [null, null],
+        //  y: [minY - pad, maxY + pad],
+        //  mode: "lines",
+        //  line: {opacity: 0},
+        //  hoverinfo: "skip",
+        //  showlegend: false
+        //};
+
+        Plotly.newPlot(
+          "plotTemp",
+          [Temp_STD, Temp_HF, Dewp_STD, Dewp_HF],
+          {
+            margin: { l: 50, r: 50, t: 20, b: 40 },
+
+            xaxis: {
+              title: "Local Time",
+              type: "date",
+            },
+
+            yaxis: {
+              title: "Temperature & Dewpoint (°F)",
+              //range: yRange,
+              autorange: true,
+            },
+
+            legend: { orientation: "h" },
+          },
+          { displaylogo: false },
+        );
+
+        // -------- CREATE FULL-RANGE COPY --------
+        let plotTracesFull = plotTraces.map((tr) => {
+          // deep-ish copy
+          let newTrace = {
+            ...tr,
+            x: [...tr.x],
+            y: [...tr.y],
+          };
+
+          // shift IFR points lower (they are negative values)
+          newTrace.y = newTrace.y.map((y) => (y < 0 ? -1500 : y));
+
+          return newTrace;
+        });
+
+        if (plotTraces.length === 0) {
+          document.getElementById("plotSynoptic").innerHTML =
+            "No cloud data available";
+          return;
+        }
+
+        Plotly.newPlot(
+          "plotSynoptic",
+          plotTraces,
+          {
+            margin: { l: 50, r: 20, t: 20, b: 40 },
+
+            xaxis: {
+              title: "Local Time",
+              type: "date",
+            },
+
+            yaxis: {
+              title: "Cloud Base AGL [ft]",
+              range: [-300, 3150],
+            },
+          },
+          { displaylogo: false },
+        );
+
+        // -------- SECOND PLOT (FULL RANGE) --------
+
+        document.getElementById("titleSynopticFull").innerText =
+          `${icao} ${hours} hr Full Cloud Profile (0 - 30,000 ft)`;
+
+        Plotly.newPlot(
+          "plotSynopticFull",
+          plotTracesFull,
+          {
+            margin: { l: 50, r: 20, t: 20, b: 40 },
+
+            xaxis: {
+              title: "Local Time",
+              type: "date",
+            },
+
+            yaxis: {
+              title: "Cloud Base AGL [ft]",
+              range: [-3000, 31500],
+            },
+          },
+          { displaylogo: false },
+        );
+      }
+
+      // ---------------- INIT ----------------
+
+      let savedIcao = null;
+      let savedHours = null;
+
+      try {
+        savedIcao = localStorage.getItem("icao");
+        savedHours = localStorage.getItem("hours");
+      } catch (e) {
+        console.warn("localStorage unavailable");
+      }
+
+      if (savedIcao) {
+        document.getElementById("icao").value = savedIcao;
+      }
+
+      if (savedHours) {
+        document.getElementById("hours").value = savedHours;
+      }
+
+      run();
+    </script>
+  </body>
 </html>
