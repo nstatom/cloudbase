@@ -341,7 +341,7 @@
 
       // ------------METAR String Formatter--------------
       function formatMetarString(m, icao) {
-        const t = new Date(m.time * 1000).toISOString();
+        const t = m.time * 1000;
         const utc =
           t.getUTCHours().toString().padStart(2, "0") +
           t.getUTCMinutes().toString().padStart(2, "0");
@@ -729,7 +729,7 @@
         let maxHeight = -1000;
 
         data.forEach((m) => {
-          let t = new Date(m.time * 1000).toISOString();
+          let t = m.time * 1000;
           let isHF = m.source === "HF";
 
           // --- IFR category ---
@@ -815,7 +815,7 @@
         };
 
         data.forEach((m) => {
-          const t = new Date(m.time * 1000).toISOString();
+          const t = m.time * 1000;
           const isHF = m.source === "HF";
 
           // --- Pressure ---
@@ -930,7 +930,7 @@
         };
 
         data.forEach((m) => {
-          const t = new Date(m.time * 1000).toISOString();
+          const t = m.time * 1000;
           const isHF = m.source === "HF";
 
           if (
@@ -1037,7 +1037,7 @@
         };
 
         data.forEach((m) => {
-          const t = new Date(m.time * 1000).toISOString();
+          const t = m.time * 1000;
           const isHF = m.source === "HF";
 
           if (m.temp !== null && m.temp !== undefined) {
