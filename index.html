@@ -397,37 +397,39 @@
             .bindPopup(`<b>Main Station</b><br>Lat: ${station.lat}<br>Lon: ${station.lon}`);
 
           // nearby markers
-nearby.forEach(s => {
+          nearby.forEach(s => {
 
-  const t = new Date(s.time * 1000);
-  const timeStr =
-    t.getUTCHours().toString().padStart(2, "0") +
-    t.getUTCMinutes().toString().padStart(2, "0") + "Z";
+            const t = new Date(s.time * 1000);
+            const timeStr =
+              t.getUTCHours().toString().padStart(2, "0") +
+              t.getUTCMinutes().toString().padStart(2, "0") + "Z";
 
-  const cloudStr = (s.clouds && s.clouds.length)
-    ? s.clouds.map(c => `${c.cover}${c.base}`).join(" ")
-    : "SKC";
+            const cloudStr = (s.clouds && s.clouds.length)
+              ? s.clouds.map(c => `${c.cover}${c.base}`).join(" ")
+              : "SKC";
 
-  const label = `${s.stid} ${timeStr} (${s.ifr || "UNK"}) ${cloudStr}`;
+            const label = `${s.stid} ${timeStr} (${s.ifr || "UNK"}) ${cloudStr}`;
 
-  // ✅ FIX IS HERE
-  const color = getIFRColor(s.ifr);
+            // ✅ FIX IS HERE
+            const color = getIFRColor(s.ifr);
 
-  L.circleMarker([s.lat, s.lon], {
-    radius: 6,
-    color: color,
-    fillColor: color,
-    fillOpacity: 0.9
-  })
-  .addTo(map)
-  .bindTooltip(label, {
-    permanent: true,
-    direction: "right",
-    offset: [8, 0],
-    className: "map-label"
-  });
+            L.circleMarker([s.lat, s.lon], {
+              radius: 6,
+              color: color,
+              fillColor: color,
+              fillOpacity: 0.9
+            })
+              .addTo(map)
+              .bindTooltip(label, {
+                permanent: true,
+                direction: "right",
+                offset: [8, 0],
+                className: "map-label"
+              });
 
-});
+          });
+
+        }
 
         // ---------------- PLOT Synoptic Full Range ----------------
         function plotSynoptic(data, icao, sizes, hours) {
