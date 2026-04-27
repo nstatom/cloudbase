@@ -89,10 +89,10 @@ pre{background:#eee;padding:10px;height:200px;overflow:auto;}
 <b>Cloud Height Plot Information</b>
 
 <p>
-Currently the plots can contain up to 168 hours (1 week) of METAR data from standard ASOS/AWOS stations at a given ICAO airport code. Plotted cloud heights are in reference to the airport ground elevation and rounded to the nearest 100 ft. Add the specific airport elevation listed above to get cloud heights in reference to MSL. Clear sky conditions (yellow circles) are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily for quick referencing (color coded squares). Note that lower level cloudy conditions (especially overcast) can obscure higher elevation clouds from being detected by the airport's ceilometer.
+Currently the plots can contain up to 168 hours (1 week) of METAR data from standard ASOS/AWOS stations at a given ICAO airport code. Plotted cloud heights are in reference to the airport ground elevation and rounded to the nearest 100 ft. Add the specific airport elevation listed above to get cloud heights in reference to MSL. Clear sky conditions (yellow circles) are plotted at 0 ft elevation and the flight rules category is plotted at a negative elevation arbitrarily (color coded squares) for quick referencing. Note that lower level cloudy conditions (especially overcast) can obscure higher elevation clouds from being detected by the airport's ceilometer.
 </p>
 <p>
-Hourly cloud data ('STD', larger filled icons) are based on standard airport METAR readings that are fetched using the <a href="https://synopticdata.com/" target="_blank" rel="noopener noreferrer">Synoptic Data</a> API. These observations average the past 30 minutes of airport ceilometer data with double weighting for the last 10 minutes of passing sky condition observations. High frequency cloud data ('HF', smaller unfilled icons) are generated from the same METAR stations and fetched using the same API. The resulting HF ceilometer observations may be more prone to overall cloud status mischaracterization in patchy cloud conditions than the hourly METAR data since each HF observation is the result of only a 5 minute collection of vertical point measurements with standard averaging. 
+Hourly cloud data ('STD', larger filled icons) are based on standard airport METAR readings that are fetched using the <a href="https://synopticdata.com/" target="_blank" rel="noopener noreferrer">Synoptic Data</a> API. These observations average the past 30 minutes of airport ceilometer data with double weighting for the last 10 minutes of passing sky condition observations. High frequency cloud data ('HF', smaller unfilled icons) are generated from the same METAR stations and fetched using the same API. The resulting HF ceilometer observations may be more prone to overall cloud status mischaracterization in patchy cloud conditions than the hourly METAR data since each HF observation is the result of only a 5 minute collection of vertical point measurements with standard, non-weighted averaging. 
 </p>
 
 <br>
@@ -190,8 +190,10 @@ console.log("timeseries:", json3?.timeseries);
 console.log("data:", json3?.timeseries?.data);
 
 // --- Airport Info ---
-const ts = json3;        // 👈 entire object IS your timeseries
-const data = json3?.data;
+//const ts = json3;        // 👈 entire object IS your timeseries
+//const data = json3?.data;
+const ts = json3?.timeseries;
+const data = ts?.data;
 
 if (!Array.isArray(data)) {
   document.getElementById("status3").innerHTML +=
@@ -200,12 +202,13 @@ if (!Array.isArray(data)) {
   return;
 }
 
-const station = json3?.station;
+//const station = json3?.station;
+const station = ts?.station;
 const lat = station?.lat;
 const lon = station?.lon;
 const alt = station?.elev;
 
-plotMap(json3.station, json3.nearby);
+plotMap(ts?.station, json3?.nearby);
 
 if(lat !== undefined && lon !== undefined){
   document.getElementById("airportInfo").innerHTML = `
