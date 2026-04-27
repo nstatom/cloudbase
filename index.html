@@ -255,17 +255,6 @@
             const lon = station?.lon;
             const alt = station?.elev;
 
-            // ------------ IFR Color Helper --------------
-            function getIFRColor(ifr) {
-              switch (ifr) {
-                case "LIFR": return "purple";
-                case "IFR": return "red";
-                case "MVFR": return "blue";
-                case "VFR": return "green";
-                default: return "gray";
-              }
-            }
-
             plotMap(ts?.station, json3?.nearby);
 
             if (lat !== undefined && lon !== undefined) {
@@ -316,6 +305,17 @@
 
         }
 
+
+        // ------------ IFR Color Helper --------------
+        function getIFRColor(ifr) {
+          switch (ifr) {
+            case "LIFR": return "purple";
+            case "IFR": return "red";
+            case "MVFR": return "blue";
+            case "VFR": return "green";
+            default: return "gray";
+          }
+        }
 
         // ------------Marker size lookup table--------------
         function getMarkerSizes(hours) {
@@ -410,7 +410,7 @@
 
             const label = `${s.stid} ${timeStr} (${s.ifr || "UNK"}) ${cloudStr}`;
             const color = getIFRColor(s.ifr);
-            
+
             L.circleMarker([s.lat, s.lon], {
               radius: 6,
               color: color,
