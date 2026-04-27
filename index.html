@@ -409,7 +409,8 @@
               : "SKC";
 
             const label = `${s.stid} ${timeStr} (${s.ifr || "UNK"}) ${cloudStr}`;
-
+            const color = getIFRColor(s.ifr);
+            
             L.circleMarker([s.lat, s.lon], {
               radius: 6,
               color: color,
