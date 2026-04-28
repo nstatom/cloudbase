@@ -341,8 +341,8 @@
 
       // ------------METAR String Formatter--------------
       function formatMetarString(m, icao) {
-        //const t = new Date(m.time);
-        const t = new Date(m.time).toISOString();
+
+        const t = new Date(m.time);
         const utc =
           String(t.getUTCHours()).padStart(2, "0") +
           String(t.getUTCMinutes()).padStart(2, "0");
@@ -407,8 +407,7 @@
 
         // nearby markers
         nearby.forEach((s) => {
-          //const t = new Date(s.time);
-          const t = new Date(s.time).toISOString();
+          const t = new Date(s.time);
           const timeStr =
             t.getUTCHours().toString().padStart(2, "0") +
             t.getUTCMinutes().toString().padStart(2, "0") +
@@ -731,15 +730,15 @@
         let maxHeight = -1000;
 
         data.forEach((m) => {
-          //let t = new Date(m.time);
-          let t = new Date(m.time).toISOString();
+          const t = new Date(m.time);                 // for logic / formatting / map
+          const tPlot = t.toISOString();              // ONLY for Plotly x-axis
           let isHF = m.source === "HF";
 
           // --- IFR category ---
           if (m.ifr) {
             let key = `${m.ifr}_${isHF ? "HF" : "STD"}`;
             if (traces[key]) {
-              traces[key].x.push(t);
+              traces[key].x.push(tPlot);
               traces[key].y.push(-150);
             }
           }
@@ -748,7 +747,7 @@
           if (!m.clouds || m.clouds.length === 0) {
             let key = isHF ? "SKC_HF" : "SKC_STD";
             if (traces[key]) {
-              traces[key].x.push(t);
+              traces[key].x.push(tPlot);
               traces[key].y.push(0);
             }
             return;
@@ -765,7 +764,7 @@
             if (base > maxHeight) maxHeight = base + 1000;
 
             if (traces[key]) {
-              traces[key].x.push(t);
+              traces[key].x.push(tPlot);
               traces[key].y.push(base);
             }
           });
@@ -818,17 +817,17 @@
         };
 
         data.forEach((m) => {
-          //const t = new Date(m.time);
-          const t = new Date(m.time).toISOString();
+          const t = new Date(m.time);                 // for logic / formatting / map
+          const tPlot = t.toISOString();              // ONLY for Plotly x-axis
           const isHF = m.source === "HF";
 
           // --- Pressure ---
           if (m.pressure !== null && m.pressure !== undefined) {
             if (isHF) {
-              pressure_HF.x.push(t);
+              pressure_HF.x.push(tPlot);
               pressure_HF.y.push(Number(m.pressure));
             } else {
-              pressure_STD.x.push(t);
+              pressure_STD.x.push(tPlot);
               pressure_STD.y.push(Number(m.pressure));
             }
           }
@@ -836,10 +835,10 @@
           // --- Visibility ---
           if (m.visibility !== null && m.visibility !== undefined) {
             if (isHF) {
-              vis_HF.x.push(t);
+              vis_HF.x.push(tPlot);
               vis_HF.y.push(Number(m.visibility));
             } else {
-              vis_STD.x.push(t);
+              vis_STD.x.push(tPlot);
               vis_STD.y.push(Number(m.visibility));
             }
           }
@@ -936,8 +935,8 @@
         };
 
         data.forEach((m) => {
-          //const t = new Date(m.time);
-          const t = new Date(m.time).toISOString();
+          const t = new Date(m.time);                 // for logic / formatting / map
+          const tPlot = t.toISOString();              // ONLY for Plotly x-axis
           const isHF = m.source === "HF";
 
           if (
@@ -947,16 +946,16 @@
             m.wind_dir !== undefined
           ) {
             if (isHF) {
-              windSpeed_HF.x.push(t);
+              windSpeed_HF.x.push(tPlot);
               windSpeed_HF.y.push(Number(m.wind_speed));
 
-              windDir_HF.x.push(t);
+              windDir_HF.x.push(tPlot);
               windDir_HF.y.push(Number(m.wind_dir));
             } else {
-              windSpeed_STD.x.push(t);
+              windSpeed_STD.x.push(tPlot);
               windSpeed_STD.y.push(Number(m.wind_speed));
 
-              windDir_STD.x.push(t);
+              windDir_STD.x.push(tPlot);
               windDir_STD.y.push(Number(m.wind_dir));
             }
           }
@@ -1044,26 +1043,26 @@
         };
 
         data.forEach((m) => {
-          //const t = new Date(m.time);
-          const t = new Date(m.time).toISOString();
+          const t = new Date(m.time);                 // for logic / formatting / map
+          const tPlot = t.toISOString();              // ONLY for Plotly x-axis
           const isHF = m.source === "HF";
 
           if (m.temp !== null && m.temp !== undefined) {
             if (isHF) {
-              Temp_HF.x.push(t);
+              Temp_HF.x.push(tPlot);
               Temp_HF.y.push(Number(m.temp));
             } else {
-              Temp_STD.x.push(t);
+              Temp_STD.x.push(tPlot);
               Temp_STD.y.push(Number(m.temp));
             }
           }
 
           if (m.dewpoint !== null && m.dewpoint !== undefined) {
             if (isHF) {
-              Dewp_HF.x.push(t);
+              Dewp_HF.x.push(tPlot);
               Dewp_HF.y.push(Number(m.dewpoint));
             } else {
-              Dewp_STD.x.push(t);
+              Dewp_STD.x.push(tPlot);
               Dewp_STD.y.push(Number(m.dewpoint));
             }
           }
