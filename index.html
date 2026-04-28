@@ -341,10 +341,10 @@
 
       // ------------METAR String Formatter--------------
       function formatMetarString(m, icao) {
-        const t = m.time * 1000;
+        const t = new Date(m.time);
         const utc =
-          t.getUTCHours().toString().padStart(2, "0") +
-          t.getUTCMinutes().toString().padStart(2, "0");
+          String(t.getUTCHours()).padStart(2, "0") +
+          String(t.getUTCMinutes()).padStart(2, "0");
 
         const source = m.source === "HF" ? "HF METAR" : "STD METAR";
 
@@ -406,7 +406,7 @@
 
         // nearby markers
         nearby.forEach((s) => {
-          const t = new Date(s.time * 1000);
+          const t = new Date(m.time);
           const timeStr =
             t.getUTCHours().toString().padStart(2, "0") +
             t.getUTCMinutes().toString().padStart(2, "0") +
@@ -729,7 +729,7 @@
         let maxHeight = -1000;
 
         data.forEach((m) => {
-          let t = m.time * 1000;
+          let t = new Date(m.time);
           let isHF = m.source === "HF";
 
           // --- IFR category ---
@@ -815,7 +815,7 @@
         };
 
         data.forEach((m) => {
-          const t = m.time * 1000;
+          const t = new Date(m.time);
           const isHF = m.source === "HF";
 
           // --- Pressure ---
@@ -930,7 +930,7 @@
         };
 
         data.forEach((m) => {
-          const t = m.time * 1000;
+          const t = new Date(m.time);
           const isHF = m.source === "HF";
 
           if (
@@ -1037,7 +1037,7 @@
         };
 
         data.forEach((m) => {
-          const t = m.time * 1000;
+          const t = new Date(m.time);
           const isHF = m.source === "HF";
 
           if (m.temp !== null && m.temp !== undefined) {
