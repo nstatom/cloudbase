@@ -406,7 +406,7 @@
 
         // nearby markers
         nearby.forEach((s) => {
-          const t = new Date(m.time);
+          const t = new Date(s.time);
           const timeStr =
             t.getUTCHours().toString().padStart(2, "0") +
             t.getUTCMinutes().toString().padStart(2, "0") +
