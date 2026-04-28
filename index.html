@@ -146,6 +146,16 @@
       minute collection of vertical point measurements with standard,
       non-weighted averaging.
     </p>
+        <p>
+      Finally, note that the airport locations on the map are color-coded by the 
+      <a
+        href="https://synopticdata.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >IFR status computation</a
+      >      
+       on the most recent data available (whether STD or HF derived). Thus the IFR status may not match the 'official' hourly METAR IFR designation.
+    </p>
 
     <br />
     <h3 id="titlePressure"></h3>
@@ -165,7 +175,7 @@
 
     <p>
       Wind direction is plotted as 0 by default if the corresponding wind speed
-      is zero. Some data points can appear overwritten in this scenario.
+      is also zero. Some data points can be difficult to discern in this scenario as they may be effectively overwritten by the accompanying parameter.
     </p>
 
     <br />
@@ -872,7 +882,7 @@
             },
 
             yaxis: {
-              title: "Sea Level Pressure (kPa) & Visibility (nm)",
+              title: "Sea Level Pressure (mbar) & Visibility (nm)",
               autorange: true,
               //range: [pressureMin, pressureMax],
               //dtick: pressureDtick,
