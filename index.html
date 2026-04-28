@@ -870,15 +870,17 @@
 
             yaxis: {
               title: "Sea Level Pressure (kPa) & Visibility (nm)",
-              range: [pressureMin, pressureMax],
-              dtick: pressureDtick,
+              autorange: true,
+              //range: [pressureMin, pressureMax],
+              //dtick: pressureDtick,
+              tickformat: ".1f"
             },
 
             yaxis2: {
               title: "Visibility (nm)",
               overlaying: "y",
               side: "right",
-              range: [visMin, visMax],
+              range: [-1, 11],
               dtick: visDtick,
             },
 
